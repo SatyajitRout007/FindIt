@@ -331,31 +331,127 @@ def main():
                     except Exception as exc:
                         st.error("Could not publish the listing. " + friendly_error(exc))
 
+    
     elif page == "My dashboard":
         st.title("My dashboard")
         mine = [x for x in listings if x.get("owner_id") == user["id"]]
         st.write(f"You have **{len(mine)}** listing(s).")
+
         if not mine:
             st.info("You haven't published a listing yet.")
+
         for item in mine:
             with st.container(border=True):
                 render_listing_card(item)
-                c1, c2 = st.columns(2)
-                with c1:
-                    new_status = st.selectbox(
-                        "Listing status",
-                        ["open", "resolved"],
-                        index=0 if item.get("status") == "open" else 1,
-                        key=f"status_{item['id']}",
+
+                item_id = item["id"]
+                item_status = item.get("status", "open")
+
+                st.caption(f"Current status: {item_status.upper()}")
+
+                col1, col2 = st.columns(2)
+
+                with col1:
+                    if item_status == "open":
+                        if st.button(
+                            "Unlist item",
+                            key=f"unlist_{item_id}",
+                            use_container_width=True,
+                        ):
+                            try:
+                                result = (
+                                    client.table("listings")
+                                    .update({"status": "resolved"})
+                                    .eq("id", item_id)
+                                    .eq("owner_id", user["id"])
+                                    .execute()
+                                )
+                                if result.data:
+                                    st.success("Item unlisted successfully.")
+                                    st.rerun()
+                                else:
+                                    st.error("The listing wasn't updated.")
+                            except Exception as exc:
+                                st.error(friendly_error(exc))
+                    else:
+                        if st.button(
+                            "Relist item",
+                            key=f"relist_{item_id}",
+                            use_container_width=True,
+                        ):
+                            try:
+                                result = (
+                                    client.table("listings")
+                                    .update({"status": "open"})
+                                    .eq("id", item_id)
+                                    .eq("owner_id", user["id"])
+                                    .execute()
+                                )
+                                if result.data:
+                                    st.success("Item relisted successfully.")
+                                    st.rerun()
+                                else:
+                                    st.error("The listing wasn't updated.")
+                            except Exception as exc:
+                                st.error(friendly_error(exc))
+
+                with col2:
+                    if st.button(
+                        "Delete permanently",
+                        key=f"delete_{item_id}",
+                        type="secondary",
+                        use_container_width=True,
+                    ):
+                        st.session_state["confirm_delete_id"] = item_id
+                        st.rerun()
+
+                if st.session_state.get("confirm_delete_id") == item_id:
+                    st.warning(
+                        "Are you sure? This permanently deletes the listing "
+                        "and its associated claim records. This cannot be undone."
                     )
-                with c2:
-                    if st.button("Save status", key=f"save_status_{item['id']}", use_container_width=True):
-                        try:
-                            client.table("listings").update({"status": new_status}).eq("id", item["id"]).eq("owner_id", user["id"]).execute()
-                            st.success("Status updated.")
+
+                    confirm_col, cancel_col = st.columns(2)
+
+                    with confirm_col:
+                        if st.button(
+                            "Yes, delete permanently",
+                            key=f"confirm_delete_{item_id}",
+                            type="primary",
+                            use_container_width=True,
+                        ):
+                            try:
+                                result = (
+                                    client.table("listings")
+                                    .delete()
+                                    .eq("id", item_id)
+                                    .eq("owner_id", user["id"])
+                                    .execute()
+                                )
+
+                                if result.data:
+                                    st.session_state.pop(
+                                        "confirm_delete_id", None
+                                    )
+                                    st.success("Listing deleted successfully.")
+                                    st.rerun()
+                                else:
+                                    st.error(
+                                        "No listing was deleted. It may "
+                                        "already be deleted, or you may "
+                                        "not have permission."
+                                    )
+                            except Exception as exc:
+                                st.error(friendly_error(exc))
+
+                    with cancel_col:
+                        if st.button(
+                            "Cancel",
+                            key=f"cancel_delete_{item_id}",
+                            use_container_width=True,
+                        ):
+                            st.session_state.pop("confirm_delete_id", None)
                             st.rerun()
-                        except Exception as exc:
-                            st.error(friendly_error(exc))
 
     elif page == "Claims inbox":
         st.title("Claims & connection requests")
