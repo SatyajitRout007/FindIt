@@ -92,10 +92,10 @@ anon_key = "YOUR-SUPABASE-PUBLISHABLE-OR-ANON-KEY"
 4. Deploy/reboot the app and test signup/login from two different accounts/devices.
 
 ## 5. Important project limitations / safety
-- The starter has account login, listings, image uploads, search, basic keyword matching, claim requests, and owner status updates.
-- It is a college-project starter, not a fully audited production service. Test permissions carefully before public use.
+- FindIt's match and duplicate scores are rule-based text comparisons, not AI predictions and not proof that an item belongs to a claimant.
+- Private ownership-check details are separated from public listings and protected by row-level security. Owners should still compare claimant answers carefully before arranging a handover.
+- The map uses optional approximate coordinates supplied by the listing poster. Never enter a home address or a precise private location.
 - The `findit-images` bucket is public so photos can display easily. Anyone with a photo URL can view it; upload only non-sensitive item photos.
-- Claim messages are private to the claimant and listing owner through row-level security. This version does not expose users' email addresses or provide in-app direct messaging.
-- Potential matches are rule-based suggestions, not AI and not proof of ownership.
-- Admin moderation is not included in this starter; add it with a separate role-controlled policy before real public launch.
-- Configure Supabase Auth rate limits, email confirmation, and site URL/redirects before sharing widely.
+- In-app messages and notifications are protected by Supabase row-level security. Users can block one another; admins can review submitted safety reports using the server-side service-role configuration.
+- This is a college-project application, not a fully audited production service. Test permissions, moderation and recovery flows carefully before sharing it widely.
+- Configure Supabase Auth rate limits, email confirmation, and site URL/redirects before public use. Keep the service-role key only in Streamlit secrets, never in GitHub or browser code.
