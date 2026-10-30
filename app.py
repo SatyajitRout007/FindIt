@@ -1,5 +1,6 @@
 
 import os
+import threading
 from datetime import date
 from io import BytesIO
 
@@ -2517,40 +2518,122 @@ def main():
             try:
                 convo_row = next(c for c in conversations if c["id"] == conversation_id)
                 other_id = convo_row["owner_id"] if convo_row["starter_id"] == user["id"] else convo_row["starter_id"]
-                st.caption(f"Chatting with **@{usernames.get(other_id, 'member')}** about **{listing_titles.get(str(convo_row['listing_id']), 'this listing')}**")
-                messages = (
-                    client.table("messages")
-                    .select("*")
-                    .eq("conversation_id", conversation_id)
-                    .order("created_at")
-                    .execute()
-                ).data or []
+                st.caption(
+                    f"Chatting with **@{usernames.get(other_id, 'member')}** about "
+                    f"**{listing_titles.get(str(convo_row['listing_id']), 'this listing')}**"
+                )
 
-                with st.container(border=True):
-                    if not messages:
-                        st.caption("This is the start of your conversation.")
-                    for msg in messages:
-                        sender = "You" if msg["sender_id"] == user["id"] else f"@{usernames.get(msg['sender_id'], 'member')}"
-                        with st.chat_message("user" if msg["sender_id"] == user["id"] else "assistant"):
-                            st.caption(sender)
-                            st.write(msg["body"])
-                            st.caption(msg["created_at"].replace("T", " ")[:16])
+                # Keep one Realtime subscription for the currently open conversation.
+                active_id = st.session_state.get("_findit_realtime_conversation_id")
+                if active_id != conversation_id:
+                    old_channel = st.session_state.get("_findit_realtime_channel")
+                    if old_channel is not None:
+                        try:
+                            client.remove_channel(old_channel)
+                        except Exception:
+                            pass
 
-                with st.form(f"send_message_{conversation_id}", clear_on_submit=True):
-                    body = st.text_area("Message", placeholder="Write a message...", max_chars=2000)
-                    send = st.form_submit_button("Send message", type="primary", use_container_width=True)
-                    if send:
-                        if not body.strip():
-                            st.warning("Write a message first.")
-                        else:
-                            client.table("messages").insert({
-                                "conversation_id": conversation_id,
-                                "sender_id": user["id"],
-                                "body": body.strip(),
-                            }).execute()
-                            st.rerun()
-                if st.button("Refresh messages", key=f"refresh_messages_{conversation_id}"):
-                    st.rerun()
+                    message_event = threading.Event()
+
+                    def on_new_message(payload):
+                        # Realtime callbacks may run outside Streamlit's script thread.
+                        # A thread-safe event lets the fragment fetch safely on its next tick.
+                        message_event.set()
+
+                    channel = (
+                        client.channel(f"findit-messages-{conversation_id}")
+                        .on_postgres_changes(
+                            "INSERT",
+                            on_new_message,
+                            schema="public",
+                            table="messages",
+                            filter=f"conversation_id=eq.{conversation_id}",
+                        )
+                        .subscribe()
+                    )
+                    st.session_state["_findit_realtime_channel"] = channel
+                    st.session_state["_findit_realtime_conversation_id"] = conversation_id
+                    st.session_state["_findit_realtime_event"] = message_event
+                    st.session_state[f"_findit_messages_cache_{conversation_id}"] = (
+                        client.table("messages")
+                        .select("*")
+                        .eq("conversation_id", conversation_id)
+                        .order("created_at")
+                        .execute()
+                    ).data or []
+
+                message_event = st.session_state["_findit_realtime_event"]
+                cache_key = f"_findit_messages_cache_{conversation_id}"
+
+                @st.fragment(run_every="1s")
+                def live_chat():
+                    # The one-second fragment tick only checks the local event.
+                    # It queries Supabase only after Realtime reports a new INSERT.
+                    if message_event.is_set():
+                        latest = (
+                            client.table("messages")
+                            .select("*")
+                            .eq("conversation_id", conversation_id)
+                            .order("created_at")
+                            .execute()
+                        ).data or []
+                        st.session_state[cache_key] = latest
+                        message_event.clear()
+
+                    messages = st.session_state.get(cache_key, [])
+                    with st.container(border=True):
+                        if not messages:
+                            st.caption("This is the start of your conversation.")
+                        for msg in messages:
+                            sender = (
+                                "You"
+                                if msg["sender_id"] == user["id"]
+                                else f"@{usernames.get(msg['sender_id'], 'member')}"
+                            )
+                            with st.chat_message(
+                                "user" if msg["sender_id"] == user["id"] else "assistant"
+                            ):
+                                st.caption(sender)
+                                st.write(msg["body"])
+                                created_at = msg.get("created_at", "")
+                                st.caption(created_at.replace("T", " ")[:16])
+
+                    st.caption("🟢 Live updates enabled")
+
+                    with st.form(f"send_message_{conversation_id}", clear_on_submit=True):
+                        body = st.text_area(
+                            "Message",
+                            placeholder="Write a message...",
+                            max_chars=2000,
+                        )
+                        send = st.form_submit_button(
+                            "Send message",
+                            type="primary",
+                            use_container_width=True,
+                        )
+                        if send:
+                            if not body.strip():
+                                st.warning("Write a message first.")
+                            else:
+                                client.table("messages").insert({
+                                    "conversation_id": conversation_id,
+                                    "sender_id": user["id"],
+                                    "body": body.strip(),
+                                }).execute()
+                                # Show the sender's message immediately; the Realtime
+                                # event will keep the other participant in sync.
+                                st.session_state[cache_key] = (
+                                    client.table("messages")
+                                    .select("*")
+                                    .eq("conversation_id", conversation_id)
+                                    .order("created_at")
+                                    .execute()
+                                ).data or []
+                                message_event.clear()
+                                st.rerun(scope="fragment")
+
+                live_chat()
+
             except Exception as exc:
                 st.error("Couldn't open this conversation. " + friendly_error(exc))
 
