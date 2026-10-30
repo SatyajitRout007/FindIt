@@ -880,31 +880,24 @@ body:has(#fi-dark-theme-marker) textarea::placeholder {
     opacity: 1 !important;
 }
 
-/* Password reveal button: keep the icon crisp and the button dark */
-body:has(#fi-dark-theme-marker) [data-testid="stTextInput"] button,
-body:has(#fi-dark-theme-marker) [data-testid="stTextInput"] [role="button"] {
-    background: #202b3a !important;
+/* Password reveal control: preserve Streamlit's native eye icon and shape.
+   Only keep the button transparent so it blends into the input field. */
+body:has(#fi-dark-theme-marker) [data-testid="stTextInput"] button {
+    background: transparent !important;
     color: #dce7f7 !important;
     border: 0 !important;
     box-shadow: none !important;
+    outline: none !important;
     opacity: 1 !important;
+    padding: 0 .65rem !important;
 }
 body:has(#fi-dark-theme-marker) [data-testid="stTextInput"] button:hover,
-body:has(#fi-dark-theme-marker) [data-testid="stTextInput"] [role="button"]:hover {
-    background: #2b3b51 !important;
-    color: #ffffff !important;
+body:has(#fi-dark-theme-marker) [data-testid="stTextInput"] button:focus,
+body:has(#fi-dark-theme-marker) [data-testid="stTextInput"] button:active {
+    background: transparent !important;
+    box-shadow: none !important;
 }
-body:has(#fi-dark-theme-marker) [data-testid="stTextInput"] button svg,
-body:has(#fi-dark-theme-marker) [data-testid="stTextInput"] [role="button"] svg {
-    color: #dce7f7 !important;
-    stroke: #dce7f7 !important;
-    fill: none !important;
-}
-body:has(#fi-dark-theme-marker) [data-testid="stTextInput"] button svg *,
-body:has(#fi-dark-theme-marker) [data-testid="stTextInput"] [role="button"] svg * {
-    stroke: currentColor !important;
-    fill: none !important;
-}
+/* Do not override SVG fill/stroke: Streamlit swaps the eye/eye-off icon itself. */
 
 /* Selects, multiselects and dropdown menus */
 body:has(#fi-dark-theme-marker) [data-testid="stSelectbox"] [data-baseweb="select"] > div,
@@ -1005,10 +998,8 @@ body:has(#fi-dark-theme-marker) [data-testid="stTextInput"] input:-webkit-autofi
     box-shadow: 0 0 0 1000px #151e2b inset !important;
     transition: background-color 99999s ease-out 0s !important;
 }
-body:has(#fi-dark-theme-marker) [data-testid="stTextInput"] button,
-body:has(#fi-dark-theme-marker) [data-testid="stTextInput"] svg {
+body:has(#fi-dark-theme-marker) [data-testid="stTextInput"] button {
     color: #dce7f7 !important;
-    fill: currentColor;
 }
 body:has(#fi-dark-theme-marker) [data-testid="stTextInput"] [data-baseweb="input"] > div {
     background: transparent !important;
