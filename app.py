@@ -469,7 +469,7 @@ def friendly_error(exc):
 
 def get_cookie_manager():
     """Create an encrypted, browser-persistent cookie manager."""
-    password = get_setting("auth", "cookie_password", "FINDIT_COOKIE_PASSWORD")
+    password = get_setting("findit_auth", "cookie_password", "FINDIT_COOKIE_PASSWORD")
     if not password or len(str(password)) < 32:
         return None
 
@@ -500,8 +500,9 @@ def save_persistent_session(cookies, session):
 
 def clear_persistent_session(cookies):
     try:
-        cookies["supabase_session"] = ""
-        cookies.save()
+        if "supabase_session" in cookies:
+            del cookies["supabase_session"]
+            cookies.save()
     except Exception:
         pass
 
@@ -1080,9 +1081,9 @@ def main():
     if cookies is None:
         st.error(
             "Persistent login is not configured. Add a strong cookie password "
-            "under [auth] in Streamlit Community Cloud Secrets."
+            "under [findit_auth] in Streamlit Community Cloud Secrets."
         )
-        st.code('[auth]\\ncookie_password = "PASTE_A_RANDOM_SECRET_OF_AT_LEAST_32_CHARACTERS"')
+        st.code('[findit_auth]\\ncookie_password = "PASTE_A_RANDOM_SECRET_OF_AT_LEAST_32_CHARACTERS"')
         st.stop()
 
     if not cookies.ready():
