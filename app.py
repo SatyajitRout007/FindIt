@@ -9,6 +9,20 @@ import streamlit as st
 from PIL import Image
 from supabase import create_client, Client
 
+from findit_features import (
+    find_duplicates,
+    get_app_base_url,
+    get_blocked_user_ids,
+    get_saved_listing_ids,
+    get_unread_notification_count,
+    render_listing_actions,
+    render_map_page,
+    render_notifications_page,
+    render_profile_page,
+    render_saved_items_page,
+    render_smart_matches_page,
+)
+
 
 # ============================================================
 # PAGE CONFIGURATION
@@ -1219,6 +1233,25 @@ def fetch_claims(client: Client):
     return result.data or []
 
 
+def publish_listing_record(client, payload, photo_bytes, private_detail):
+    """Publish the listing first, then attach private owner-only verification data."""
+    if photo_bytes:
+        payload["image_url"] = upload_image(
+            client, BytesIO(photo_bytes), payload["owner_id"]
+        )
+    created = client.table("listings").insert(payload).select("id").execute()
+    if not created.data:
+        raise RuntimeError("The listing could not be saved.")
+    listing_id = created.data[0]["id"]
+    if private_detail and private_detail.strip():
+        client.table("listing_verification").insert({
+            "listing_id": listing_id,
+            "owner_id": payload["owner_id"],
+            "private_detail": private_detail.strip()[:500],
+        }).execute()
+    return listing_id
+
+
 # ============================================================
 # REUSABLE UI COMPONENTS
 # ============================================================
@@ -1240,7 +1273,10 @@ def render_hero(eyebrow, title, description):
     """, unsafe_allow_html=True)
 
 
-def render_listing_card(item, show_claim_button=False, client=None, user=None):
+def render_listing_card(
+    item, show_claim_button=False, client=None, user=None,
+    saved_ids=None, base_url=None, show_actions=False
+):
     listing_type = item.get("listing_type", "found")
     status = item.get("status", "open")
 
@@ -1325,6 +1361,11 @@ def render_listing_card(item, show_claim_button=False, client=None, user=None):
 
                             except Exception as exc:
                                 st.error(friendly_error(exc))
+
+            if client and user and (show_claim_button or show_actions):
+                render_listing_actions(
+                    client, user, item, saved_ids or set(), base_url
+                )
 
 
 # ============================================================
