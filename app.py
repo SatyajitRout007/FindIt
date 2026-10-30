@@ -375,6 +375,12 @@ div[data-testid="stTextArea"] textarea:focus {
 [data-testid="stSidebar"] [role="radiogroup"] {
     gap: 3px;
 }
+/* Hide Streamlit radio indicators; keep the whole row clickable. */
+[data-testid="stSidebar"] [role="radiogroup"] label [data-baseweb="radio"],
+[data-testid="stSidebar"] [role="radiogroup"] label input[type="radio"],
+[data-testid="stSidebar"] [role="radiogroup"] label > div:first-child > div:first-child {
+    display: none !important;
+}
 [data-testid="stSidebar"] [role="radiogroup"] label {
     background: transparent !important;
     border: 1px solid transparent;
