@@ -910,6 +910,52 @@ def get_user():
     return st.session_state.get("user")
 
 
+def get_profile(client, user_id):
+    result = (
+        client.table("profiles")
+        .select("user_id, username")
+        .eq("user_id", user_id)
+        .limit(1)
+        .execute()
+    )
+    return result.data[0] if result.data else None
+
+
+def save_username(client, user_id, username):
+    clean = username.strip().lstrip("@")
+    if not (3 <= len(clean) <= 20):
+        raise ValueError("Username must be 3–20 characters.")
+    if not clean.replace("_", "").replace(".", "").isalnum():
+        raise ValueError("Use only letters, numbers, dots and underscores.")
+    client.table("profiles").upsert({
+        "user_id": user_id,
+        "username": clean,
+    }, on_conflict="user_id").execute()
+
+
+def start_listing_conversation(client, listing, user):
+    existing = (
+        client.table("conversations")
+        .select("id")
+        .eq("listing_id", str(listing["id"]))
+        .eq("starter_id", user["id"])
+        .limit(1)
+        .execute()
+    )
+    if existing.data:
+        conversation_id = existing.data[0]["id"]
+    else:
+        created = client.table("conversations").insert({
+            "listing_id": str(listing["id"]),
+            "starter_id": user["id"],
+            "owner_id": listing["owner_id"],
+        }).execute()
+        conversation_id = created.data[0]["id"]
+    st.session_state["open_conversation_id"] = conversation_id
+    st.session_state["main_navigation"] = "Messages"
+    st.rerun()
+
+
 def do_logout():
     client = st.session_state.get("_supabase_client")
 
@@ -1048,6 +1094,16 @@ def render_listing_card(item, show_claim_button=False, client=None, user=None):
 
             if show_claim_button and client and user:
                 if item.get("owner_id") != user["id"] and status == "open":
+                    if st.button(
+                        "💬 Message owner",
+                        key=f"dm_listing_{item['id']}",
+                        use_container_width=True,
+                    ):
+                        try:
+                            start_listing_conversation(client, item, user)
+                        except Exception as exc:
+                            st.error("Couldn't start this conversation. " + friendly_error(exc))
+
                     with st.form(f"claim_{item['id']}"):
                         message = st.text_area(
                             "Message to the owner",
@@ -1533,6 +1589,12 @@ def main():
             )
 
             with st.form("signup_form"):
+                new_username = st.text_input(
+                    "Unique username",
+                    placeholder="e.g. Satyajit007",
+                    help="3–20 characters. Letters, numbers, dots and underscores.",
+                ).strip().lstrip("@")
+
                 new_email = st.text_input(
                     "Email address",
                     key="signup_email",
@@ -1556,7 +1618,10 @@ def main():
                 )
 
                 if submitted:
-                    if not new_email or "@" not in new_email:
+                    if not (3 <= len(new_username) <= 20) or not new_username.replace("_", "").replace(".", "").isalnum():
+                        st.error("Choose a username 3–20 characters long using letters, numbers, dots or underscores.")
+
+                    elif not new_email or "@" not in new_email:
                         st.error("Enter a valid email address.")
 
                     elif len(new_password) < 8:
@@ -1570,6 +1635,9 @@ def main():
                             response = client.auth.sign_up({
                                 "email": new_email,
                                 "password": new_password,
+                                "options": {
+                                    "data": {"username": new_username}
+                                },
                             })
 
                             if response.session:
@@ -1593,6 +1661,46 @@ def main():
         )
 
         st.stop()
+
+    # Ensure every account has a unique public username.
+    try:
+        profile = get_profile(client, user["id"])
+    except Exception as exc:
+        st.error("Username setup needs the Supabase messaging SQL migration. " + friendly_error(exc))
+        st.stop()
+
+    if not profile or not profile.get("username"):
+        render_brand()
+        render_hero(
+            "CHOOSE YOUR ID",
+            "Create your FindIt username",
+            "Pick a unique username so other members can recognise you without sharing personal contact details.",
+        )
+        with st.form("choose_username_form"):
+            desired_username = st.text_input(
+                "Unique username",
+                placeholder="e.g. Satyajit007",
+                help="3–20 characters. Letters, numbers, dots and underscores.",
+            )
+            submitted_username = st.form_submit_button(
+                "Save username",
+                type="primary",
+                use_container_width=True,
+            )
+            if submitted_username:
+                try:
+                    save_username(client, user["id"], desired_username)
+                    st.success("Username saved!")
+                    st.rerun()
+                except Exception as exc:
+                    message = str(exc)
+                    if "duplicate" in message.lower() or "unique" in message.lower():
+                        st.error("That username is already taken. Try another one.")
+                    else:
+                        st.error(message)
+        st.stop()
+
+    user["username"] = profile["username"]
 
     # Determine admin status from the protected Supabase role table.
     admin_mode = is_admin_user(client, user)
@@ -1618,12 +1726,14 @@ def main():
                 "Report an item",
                 "My dashboard",
                 "Claims inbox",
+                "Messages",
             ] + (["Admin panel"] if admin_mode else []),
             format_func=lambda x: {
                 "Home & Search": "⌕   Explore items",
                 "Report an item": "＋   Report an item",
                 "My dashboard": "▦   My dashboard",
                 "Claims inbox": "✉   Claims inbox",
+                "Messages": "💬   Messages",
                 "Admin panel": "⚙   Admin panel",
             }.get(x, x),
             label_visibility="collapsed",
@@ -2358,6 +2468,91 @@ def main():
                     )
 
                     st.write(claim.get("message", ""))
+
+    # ========================================================
+    # PRIVATE MESSAGES
+    # ========================================================
+
+    elif page == "Messages":
+        render_hero(
+            "PRIVATE CONVERSATIONS",
+            "Messages",
+            "Chat with other FindIt members about specific lost or found listings.",
+        )
+        try:
+            conversations = (
+                client.table("conversations")
+                .select("*")
+                .order("created_at", desc=True)
+                .execute()
+            ).data or []
+            profiles_result = client.table("profiles").select("user_id, username").execute()
+            usernames = {
+                p["user_id"]: p.get("username") or "FindIt member"
+                for p in (profiles_result.data or [])
+            }
+            listing_titles = {
+                str(x["id"]): x.get("title", "Listing") for x in listings
+            }
+        except Exception as exc:
+            st.error("Couldn't load messages. " + friendly_error(exc))
+            conversations = []
+
+        if not conversations:
+            st.info("No conversations yet. Open a listing and select **Message owner** to start one.")
+        else:
+            options = {}
+            for convo in conversations:
+                other_id = convo["owner_id"] if convo["starter_id"] == user["id"] else convo["starter_id"]
+                label = f"@{usernames.get(other_id, 'member')} · {listing_titles.get(str(convo['listing_id']), 'Listing')}"
+                options[label] = convo["id"]
+
+            labels = list(options.keys())
+            selected_id = st.session_state.get("open_conversation_id")
+            selected_label = next((k for k, v in options.items() if v == selected_id), labels[0])
+            chosen = st.selectbox("Your conversations", labels, index=labels.index(selected_label))
+            conversation_id = options[chosen]
+            st.session_state["open_conversation_id"] = conversation_id
+
+            try:
+                convo_row = next(c for c in conversations if c["id"] == conversation_id)
+                other_id = convo_row["owner_id"] if convo_row["starter_id"] == user["id"] else convo_row["starter_id"]
+                st.caption(f"Chatting with **@{usernames.get(other_id, 'member')}** about **{listing_titles.get(str(convo_row['listing_id']), 'this listing')}**")
+                messages = (
+                    client.table("messages")
+                    .select("*")
+                    .eq("conversation_id", conversation_id)
+                    .order("created_at")
+                    .execute()
+                ).data or []
+
+                with st.container(border=True):
+                    if not messages:
+                        st.caption("This is the start of your conversation.")
+                    for msg in messages:
+                        sender = "You" if msg["sender_id"] == user["id"] else f"@{usernames.get(msg['sender_id'], 'member')}"
+                        with st.chat_message("user" if msg["sender_id"] == user["id"] else "assistant"):
+                            st.caption(sender)
+                            st.write(msg["body"])
+                            st.caption(msg["created_at"].replace("T", " ")[:16])
+
+                with st.form(f"send_message_{conversation_id}", clear_on_submit=True):
+                    body = st.text_area("Message", placeholder="Write a message...", max_chars=2000)
+                    send = st.form_submit_button("Send message", type="primary", use_container_width=True)
+                    if send:
+                        if not body.strip():
+                            st.warning("Write a message first.")
+                        else:
+                            client.table("messages").insert({
+                                "conversation_id": conversation_id,
+                                "sender_id": user["id"],
+                                "body": body.strip(),
+                            }).execute()
+                            st.rerun()
+                if st.button("Refresh messages", key=f"refresh_messages_{conversation_id}"):
+                    st.rerun()
+            except Exception as exc:
+                st.error("Couldn't open this conversation. " + friendly_error(exc))
 
     # ========================================================
     # ADMIN PANEL
