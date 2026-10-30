@@ -2424,6 +2424,11 @@ def main():
         )
         try:
             render_profile_page(client, user, listings)
+        except Exception as exc:
+            st.error(
+                "Profile features need the new FindIt feature migration. "
+                + friendly_error(exc)
+            )
 
         st.divider()
         st.markdown("### Account settings")
@@ -2466,11 +2471,6 @@ def main():
         )
         if st.button("Log out", key="profile_log_out", use_container_width=True):
             do_logout()
-        except Exception as exc:
-            st.error(
-                "Profile features need the new FindIt feature migration. "
-                + friendly_error(exc)
-            )
 
     # ========================================================
     # REPORT AN ITEM
