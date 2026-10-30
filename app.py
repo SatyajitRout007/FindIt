@@ -622,11 +622,11 @@ hr { border-color: #e8edf4 !important; }
 /* ============================================================
    REAL DARK THEME — follows Streamlit's selected Light/Dark mode
    ============================================================ */
-:root[data-theme="dark"],
-html[data-theme="dark"],
-body[data-theme="dark"],
-.stApp[data-theme="dark"],
-[data-testid="stAppViewContainer"][data-theme="dark"] {
+body:has(#fi-dark-theme-marker),
+body:has(#fi-dark-theme-marker),
+body:has(#fi-dark-theme-marker),
+body:has(#fi-dark-theme-marker),
+body:has(#fi-dark-theme-marker) {
     color-scheme: dark;
     --ink: #edf2fb;
     --muted: #a7b3c7;
@@ -638,210 +638,227 @@ body[data-theme="dark"],
     background: #111827 !important;
     color: #edf2fb !important;
 }
-:root[data-theme="dark"] .stApp,
-html[data-theme="dark"] .stApp,
-body[data-theme="dark"] .stApp,
-.stApp[data-theme="dark"] {
+body:has(#fi-dark-theme-marker) .stApp,
+body:has(#fi-dark-theme-marker) .stApp,
+body:has(#fi-dark-theme-marker) .stApp,
+body:has(#fi-dark-theme-marker) {
     background: #111827 !important;
     color: #edf2fb !important;
 }
-:root[data-theme="dark"] [data-testid="stAppViewContainer"],
-html[data-theme="dark"] [data-testid="stAppViewContainer"],
-body[data-theme="dark"] [data-testid="stAppViewContainer"] {
+body:has(#fi-dark-theme-marker) [data-testid="stAppViewContainer"],
+body:has(#fi-dark-theme-marker) [data-testid="stAppViewContainer"],
+body:has(#fi-dark-theme-marker) [data-testid="stAppViewContainer"] {
     background: #111827 !important;
     color: #edf2fb !important;
 }
-:root[data-theme="dark"] [data-testid="stHeader"],
-html[data-theme="dark"] [data-testid="stHeader"],
-body[data-theme="dark"] [data-testid="stHeader"] {
+body:has(#fi-dark-theme-marker) [data-testid="stHeader"],
+body:has(#fi-dark-theme-marker) [data-testid="stHeader"],
+body:has(#fi-dark-theme-marker) [data-testid="stHeader"] {
     background: rgba(17,24,39,.88) !important;
 }
-:root[data-theme="dark"] [data-testid="stSidebar"],
-html[data-theme="dark"] [data-testid="stSidebar"],
-body[data-theme="dark"] [data-testid="stSidebar"] {
+body:has(#fi-dark-theme-marker) [data-testid="stSidebar"],
+body:has(#fi-dark-theme-marker) [data-testid="stSidebar"],
+body:has(#fi-dark-theme-marker) [data-testid="stSidebar"] {
     background: #182231 !important;
     border-right: 1px solid #2b3748 !important;
     color: #edf2fb !important;
 }
-:root[data-theme="dark"] [data-testid="stMarkdownContainer"],
-:root[data-theme="dark"] [data-testid="stMarkdownContainer"] p,
-:root[data-theme="dark"] [data-testid="stMarkdownContainer"] li,
-:root[data-theme="dark"] [data-testid="stMarkdownContainer"] strong,
-:root[data-theme="dark"] [data-testid="stMarkdownContainer"] em,
-:root[data-theme="dark"] label,
-:root[data-theme="dark"] .stMarkdown,
-:root[data-theme="dark"] .stText,
-:root[data-theme="dark"] [data-testid="stCaptionContainer"],
-:root[data-theme="dark"] [data-testid="stWidgetLabel"],
-:root[data-theme="dark"] [data-testid="stForm"] label,
-html[data-theme="dark"] [data-testid="stMarkdownContainer"],
-html[data-theme="dark"] [data-testid="stMarkdownContainer"] p,
-html[data-theme="dark"] [data-testid="stMarkdownContainer"] li,
-html[data-theme="dark"] [data-testid="stMarkdownContainer"] strong,
-html[data-theme="dark"] label,
-html[data-theme="dark"] [data-testid="stCaptionContainer"],
-html[data-theme="dark"] [data-testid="stWidgetLabel"],
-body[data-theme="dark"] [data-testid="stMarkdownContainer"],
-body[data-theme="dark"] label {
+body:has(#fi-dark-theme-marker) [data-testid="stMarkdownContainer"],
+body:has(#fi-dark-theme-marker) [data-testid="stMarkdownContainer"] p,
+body:has(#fi-dark-theme-marker) [data-testid="stMarkdownContainer"] li,
+body:has(#fi-dark-theme-marker) [data-testid="stMarkdownContainer"] strong,
+body:has(#fi-dark-theme-marker) [data-testid="stMarkdownContainer"] em,
+body:has(#fi-dark-theme-marker) label,
+body:has(#fi-dark-theme-marker) .stMarkdown,
+body:has(#fi-dark-theme-marker) .stText,
+body:has(#fi-dark-theme-marker) [data-testid="stCaptionContainer"],
+body:has(#fi-dark-theme-marker) [data-testid="stWidgetLabel"],
+body:has(#fi-dark-theme-marker) [data-testid="stForm"] label,
+body:has(#fi-dark-theme-marker) [data-testid="stMarkdownContainer"],
+body:has(#fi-dark-theme-marker) [data-testid="stMarkdownContainer"] p,
+body:has(#fi-dark-theme-marker) [data-testid="stMarkdownContainer"] li,
+body:has(#fi-dark-theme-marker) [data-testid="stMarkdownContainer"] strong,
+body:has(#fi-dark-theme-marker) label,
+body:has(#fi-dark-theme-marker) [data-testid="stCaptionContainer"],
+body:has(#fi-dark-theme-marker) [data-testid="stWidgetLabel"],
+body:has(#fi-dark-theme-marker) [data-testid="stMarkdownContainer"],
+body:has(#fi-dark-theme-marker) label {
     color: #dce5f3 !important;
 }
-:root[data-theme="dark"] h1,
-:root[data-theme="dark"] h2,
-:root[data-theme="dark"] h3,
-:root[data-theme="dark"] h4,
-html[data-theme="dark"] h1,
-html[data-theme="dark"] h2,
-html[data-theme="dark"] h3,
-html[data-theme="dark"] h4 {
+body:has(#fi-dark-theme-marker) h1,
+body:has(#fi-dark-theme-marker) h2,
+body:has(#fi-dark-theme-marker) h3,
+body:has(#fi-dark-theme-marker) h4,
+body:has(#fi-dark-theme-marker) h1,
+body:has(#fi-dark-theme-marker) h2,
+body:has(#fi-dark-theme-marker) h3,
+body:has(#fi-dark-theme-marker) h4 {
     color: #f3f6fc !important;
 }
-:root[data-theme="dark"] .fi-hero,
-html[data-theme="dark"] .fi-hero,
-body[data-theme="dark"] .fi-hero {
+body:has(#fi-dark-theme-marker) .fi-hero,
+body:has(#fi-dark-theme-marker) .fi-hero,
+body:has(#fi-dark-theme-marker) .fi-hero {
     background: linear-gradient(115deg,#17263b 0%,#1c3558 58%,#244b91 100%) !important;
     border: 1px solid #34445d !important;
 }
-:root[data-theme="dark"] .fi-hero h1,
-:root[data-theme="dark"] .fi-hero p,
-:root[data-theme="dark"] .fi-eyebrow,
-html[data-theme="dark"] .fi-hero h1,
-html[data-theme="dark"] .fi-hero p,
-html[data-theme="dark"] .fi-eyebrow {
+body:has(#fi-dark-theme-marker) .fi-hero h1,
+body:has(#fi-dark-theme-marker) .fi-hero p,
+body:has(#fi-dark-theme-marker) .fi-eyebrow,
+body:has(#fi-dark-theme-marker) .fi-hero h1,
+body:has(#fi-dark-theme-marker) .fi-hero p,
+body:has(#fi-dark-theme-marker) .fi-eyebrow {
     color: #f4f7ff !important;
 }
-:root[data-theme="dark"] .fi-hero p,
-html[data-theme="dark"] .fi-hero p { color: #c4d1e5 !important; }
-:root[data-theme="dark"] .fi-stat,
-:root[data-theme="dark"] div[data-testid="stVerticalBlockBorderWrapper"],
-:root[data-theme="dark"] div[data-testid="stForm"],
-:root[data-theme="dark"] [data-testid="stMetric"],
-html[data-theme="dark"] .fi-stat,
-html[data-theme="dark"] div[data-testid="stVerticalBlockBorderWrapper"],
-html[data-theme="dark"] div[data-testid="stForm"],
-html[data-theme="dark"] [data-testid="stMetric"],
-body[data-theme="dark"] div[data-testid="stVerticalBlockBorderWrapper"] {
+body:has(#fi-dark-theme-marker) .fi-hero p,
+body:has(#fi-dark-theme-marker) .fi-hero p { color: #c4d1e5 !important; }
+body:has(#fi-dark-theme-marker) .fi-stat,
+body:has(#fi-dark-theme-marker) div[data-testid="stVerticalBlockBorderWrapper"],
+body:has(#fi-dark-theme-marker) div[data-testid="stForm"],
+body:has(#fi-dark-theme-marker) [data-testid="stMetric"],
+body:has(#fi-dark-theme-marker) .fi-stat,
+body:has(#fi-dark-theme-marker) div[data-testid="stVerticalBlockBorderWrapper"],
+body:has(#fi-dark-theme-marker) div[data-testid="stForm"],
+body:has(#fi-dark-theme-marker) [data-testid="stMetric"],
+body:has(#fi-dark-theme-marker) div[data-testid="stVerticalBlockBorderWrapper"] {
     background: #202b3a !important;
     border-color: #344154 !important;
     box-shadow: 0 8px 24px rgba(0,0,0,.18) !important;
     color: #e7edf7 !important;
 }
-:root[data-theme="dark"] .fi-stat-label,
-:root[data-theme="dark"] .fi-muted,
-:root[data-theme="dark"] .fi-section-subtitle,
-:root[data-theme="dark"] [data-testid="stMetricLabel"],
-:root[data-theme="dark"] [data-testid="stCaptionContainer"],
-html[data-theme="dark"] .fi-stat-label,
-html[data-theme="dark"] .fi-muted,
-html[data-theme="dark"] .fi-section-subtitle,
-html[data-theme="dark"] [data-testid="stMetricLabel"],
-html[data-theme="dark"] [data-testid="stCaptionContainer"] {
+body:has(#fi-dark-theme-marker) .fi-stat-label,
+body:has(#fi-dark-theme-marker) .fi-muted,
+body:has(#fi-dark-theme-marker) .fi-section-subtitle,
+body:has(#fi-dark-theme-marker) [data-testid="stMetricLabel"],
+body:has(#fi-dark-theme-marker) [data-testid="stCaptionContainer"],
+body:has(#fi-dark-theme-marker) .fi-stat-label,
+body:has(#fi-dark-theme-marker) .fi-muted,
+body:has(#fi-dark-theme-marker) .fi-section-subtitle,
+body:has(#fi-dark-theme-marker) [data-testid="stMetricLabel"],
+body:has(#fi-dark-theme-marker) [data-testid="stCaptionContainer"] {
     color: #aebbd0 !important;
 }
-:root[data-theme="dark"] .fi-stat-value,
-:root[data-theme="dark"] [data-testid="stMetricValue"],
-html[data-theme="dark"] .fi-stat-value,
-html[data-theme="dark"] [data-testid="stMetricValue"] {
+body:has(#fi-dark-theme-marker) .fi-stat-value,
+body:has(#fi-dark-theme-marker) [data-testid="stMetricValue"],
+body:has(#fi-dark-theme-marker) .fi-stat-value,
+body:has(#fi-dark-theme-marker) [data-testid="stMetricValue"] {
     color: #f3f6fc !important;
 }
-:root[data-theme="dark"] div[data-testid="stTextInput"] input,
-:root[data-theme="dark"] div[data-testid="stTextArea"] textarea,
-:root[data-theme="dark"] div[data-testid="stDateInput"] input,
-:root[data-theme="dark"] [data-baseweb="select"] > div,
-:root[data-theme="dark"] [data-baseweb="input"] input,
-:root[data-theme="dark"] [data-baseweb="textarea"] textarea,
-html[data-theme="dark"] div[data-testid="stTextInput"] input,
-html[data-theme="dark"] div[data-testid="stTextArea"] textarea,
-html[data-theme="dark"] div[data-testid="stDateInput"] input,
-html[data-theme="dark"] [data-baseweb="select"] > div,
-html[data-theme="dark"] [data-baseweb="input"] input,
-html[data-theme="dark"] [data-baseweb="textarea"] textarea {
+body:has(#fi-dark-theme-marker) div[data-testid="stTextInput"] input,
+body:has(#fi-dark-theme-marker) div[data-testid="stTextArea"] textarea,
+body:has(#fi-dark-theme-marker) div[data-testid="stDateInput"] input,
+body:has(#fi-dark-theme-marker) [data-baseweb="select"] > div,
+body:has(#fi-dark-theme-marker) [data-baseweb="input"] input,
+body:has(#fi-dark-theme-marker) [data-baseweb="textarea"] textarea,
+body:has(#fi-dark-theme-marker) div[data-testid="stTextInput"] input,
+body:has(#fi-dark-theme-marker) div[data-testid="stTextArea"] textarea,
+body:has(#fi-dark-theme-marker) div[data-testid="stDateInput"] input,
+body:has(#fi-dark-theme-marker) [data-baseweb="select"] > div,
+body:has(#fi-dark-theme-marker) [data-baseweb="input"] input,
+body:has(#fi-dark-theme-marker) [data-baseweb="textarea"] textarea {
     background: #151e2b !important;
     color: #f0f4fb !important;
     border-color: #435168 !important;
 }
-:root[data-theme="dark"] input::placeholder,
-:root[data-theme="dark"] textarea::placeholder,
-html[data-theme="dark"] input::placeholder,
-html[data-theme="dark"] textarea::placeholder {
+body:has(#fi-dark-theme-marker) input::placeholder,
+body:has(#fi-dark-theme-marker) textarea::placeholder,
+body:has(#fi-dark-theme-marker) input::placeholder,
+body:has(#fi-dark-theme-marker) textarea::placeholder {
     color: #8998ad !important;
     opacity: 1 !important;
 }
-:root[data-theme="dark"] [data-baseweb="select"] *,
-:root[data-theme="dark"] [role="listbox"],
-:root[data-theme="dark"] [role="option"],
-html[data-theme="dark"] [data-baseweb="select"] *,
-html[data-theme="dark"] [role="listbox"],
-html[data-theme="dark"] [role="option"] {
+body:has(#fi-dark-theme-marker) [data-baseweb="select"] *,
+body:has(#fi-dark-theme-marker) [role="listbox"],
+body:has(#fi-dark-theme-marker) [role="option"],
+body:has(#fi-dark-theme-marker) [data-baseweb="select"] *,
+body:has(#fi-dark-theme-marker) [role="listbox"],
+body:has(#fi-dark-theme-marker) [role="option"] {
     color: #e7edf7 !important;
 }
-:root[data-theme="dark"] [role="listbox"],
-:root[data-theme="dark"] [role="option"],
-html[data-theme="dark"] [role="listbox"],
-html[data-theme="dark"] [role="option"] {
+body:has(#fi-dark-theme-marker) [role="listbox"],
+body:has(#fi-dark-theme-marker) [role="option"],
+body:has(#fi-dark-theme-marker) [role="listbox"],
+body:has(#fi-dark-theme-marker) [role="option"] {
     background: #202b3a !important;
 }
-:root[data-theme="dark"] .stButton > button,
-:root[data-theme="dark"] .stFormSubmitButton > button,
-html[data-theme="dark"] .stButton > button,
-html[data-theme="dark"] .stFormSubmitButton > button {
+body:has(#fi-dark-theme-marker) .stButton > button,
+body:has(#fi-dark-theme-marker) .stFormSubmitButton > button,
+body:has(#fi-dark-theme-marker) .stButton > button,
+body:has(#fi-dark-theme-marker) .stFormSubmitButton > button {
     background: #293649 !important;
     color: #f0f4fb !important;
     border-color: #46546a !important;
 }
-:root[data-theme="dark"] .stButton > button[kind="primary"],
-:root[data-theme="dark"] .stFormSubmitButton > button[kind="primary"],
-html[data-theme="dark"] .stButton > button[kind="primary"],
-html[data-theme="dark"] .stFormSubmitButton > button[kind="primary"] {
+body:has(#fi-dark-theme-marker) .stButton > button[kind="primary"],
+body:has(#fi-dark-theme-marker) .stFormSubmitButton > button[kind="primary"],
+body:has(#fi-dark-theme-marker) .stButton > button[kind="primary"],
+body:has(#fi-dark-theme-marker) .stFormSubmitButton > button[kind="primary"] {
     background: #416fe8 !important;
     color: #fff !important;
     border-color: #416fe8 !important;
 }
-:root[data-theme="dark"] .fi-chip,
-html[data-theme="dark"] .fi-chip { background: #354154 !important; color: #e1e9f5 !important; }
-:root[data-theme="dark"] .fi-lost,
-html[data-theme="dark"] .fi-lost { background: #512d31 !important; color: #ffb9b2 !important; }
-:root[data-theme="dark"] .fi-found,
-html[data-theme="dark"] .fi-found { background: #1f4538 !important; color: #a8ebc8 !important; }
-:root[data-theme="dark"] .fi-open,
-html[data-theme="dark"] .fi-open { background: #263e68 !important; color: #b9d0ff !important; }
-:root[data-theme="dark"] .fi-resolved,
-html[data-theme="dark"] .fi-resolved { background: #394354 !important; color: #c5cfdd !important; }
-:root[data-theme="dark"] [data-testid="stTabs"] [data-baseweb="tab-list"],
-html[data-theme="dark"] [data-testid="stTabs"] [data-baseweb="tab-list"] {
+body:has(#fi-dark-theme-marker) .fi-chip,
+body:has(#fi-dark-theme-marker) .fi-chip { background: #354154 !important; color: #e1e9f5 !important; }
+body:has(#fi-dark-theme-marker) .fi-lost,
+body:has(#fi-dark-theme-marker) .fi-lost { background: #512d31 !important; color: #ffb9b2 !important; }
+body:has(#fi-dark-theme-marker) .fi-found,
+body:has(#fi-dark-theme-marker) .fi-found { background: #1f4538 !important; color: #a8ebc8 !important; }
+body:has(#fi-dark-theme-marker) .fi-open,
+body:has(#fi-dark-theme-marker) .fi-open { background: #263e68 !important; color: #b9d0ff !important; }
+body:has(#fi-dark-theme-marker) .fi-resolved,
+body:has(#fi-dark-theme-marker) .fi-resolved { background: #394354 !important; color: #c5cfdd !important; }
+body:has(#fi-dark-theme-marker) [data-testid="stTabs"] [data-baseweb="tab-list"],
+body:has(#fi-dark-theme-marker) [data-testid="stTabs"] [data-baseweb="tab-list"] {
     border-color: #344154 !important;
 }
-:root[data-theme="dark"] [data-testid="stTabs"] button[role="tab"],
-html[data-theme="dark"] [data-testid="stTabs"] button[role="tab"] {
+body:has(#fi-dark-theme-marker) [data-testid="stTabs"] button[role="tab"],
+body:has(#fi-dark-theme-marker) [data-testid="stTabs"] button[role="tab"] {
     color: #cbd6e6 !important;
 }
-:root[data-theme="dark"] hr,
-html[data-theme="dark"] hr { border-color: #344154 !important; }
-:root[data-theme="dark"] [data-testid="stAlert"],
-html[data-theme="dark"] [data-testid="stAlert"] {
+body:has(#fi-dark-theme-marker) hr,
+body:has(#fi-dark-theme-marker) hr { border-color: #344154 !important; }
+body:has(#fi-dark-theme-marker) [data-testid="stAlert"],
+body:has(#fi-dark-theme-marker) [data-testid="stAlert"] {
     background: #202b3a !important;
     color: #e7edf7 !important;
 }
-:root[data-theme="dark"] [data-testid="stSidebar"] [role="radiogroup"] label,
-html[data-theme="dark"] [data-testid="stSidebar"] [role="radiogroup"] label {
+body:has(#fi-dark-theme-marker) [data-testid="stSidebar"] [role="radiogroup"] label,
+body:has(#fi-dark-theme-marker) [data-testid="stSidebar"] [role="radiogroup"] label {
     background: #202b3a !important;
     color: #dce5f3 !important;
     border-color: #344154 !important;
 }
-:root[data-theme="dark"] [data-testid="stSidebar"] [role="radiogroup"] label:hover,
-html[data-theme="dark"] [data-testid="stSidebar"] [role="radiogroup"] label:hover {
+body:has(#fi-dark-theme-marker) [data-testid="stSidebar"] [role="radiogroup"] label:hover,
+body:has(#fi-dark-theme-marker) [data-testid="stSidebar"] [role="radiogroup"] label:hover {
     background: #293b55 !important;
 }
-:root[data-theme="dark"] [data-testid="stCheckbox"] label,
-html[data-theme="dark"] [data-testid="stCheckbox"] label {
+body:has(#fi-dark-theme-marker) [data-testid="stCheckbox"] label,
+body:has(#fi-dark-theme-marker) [data-testid="stCheckbox"] label {
     color: #e0e8f4 !important;
 }
-:root[data-theme="dark"] [data-testid="stImage"] img,
-html[data-theme="dark"] [data-testid="stImage"] img {
+body:has(#fi-dark-theme-marker) [data-testid="stImage"] img,
+body:has(#fi-dark-theme-marker) [data-testid="stImage"] img {
     border: 1px solid #344154;
 }
 
 </style>
 """, unsafe_allow_html=True)
+
+
+def render_theme_toggle():
+    """Show FindIt's own Light/Dark switch, independent of OS theme."""
+    st.sidebar.markdown("### Appearance")
+    theme = st.sidebar.radio(
+        "Choose theme",
+        ["Light", "Dark"],
+        horizontal=True,
+        key="fi_theme_mode",
+        label_visibility="collapsed",
+    )
+    if theme == "Dark":
+        st.sidebar.markdown(
+            '<div id="fi-dark-theme-marker" style="display:none"></div>',
+            unsafe_allow_html=True,
+        )
 
 
 # ============================================================
@@ -1451,7 +1468,7 @@ def main():
 
         st.stop()
 
-    user = get_user()
+    render_theme_toggle()\n\n    user = get_user()
 
     # ========================================================
     # LOGIN AND SIGNUP
