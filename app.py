@@ -5,6 +5,13 @@ from datetime import date
 from io import BytesIO
 
 import streamlit as st
+
+# Compatibility for streamlit-cookies-manager, which still decorates a helper
+# with the removed st.cache API. Its helper returns key bytes, so cache_data
+# is the appropriate modern replacement.
+if not hasattr(st, "cache"):
+    st.cache = st.cache_data
+
 from PIL import Image
 from streamlit_cookies_manager import EncryptedCookieManager
 from supabase import create_client, Client
