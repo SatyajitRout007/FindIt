@@ -1,10 +1,7 @@
 """Additional FindIt features: matching, saves, notifications, map, profiles and safety."""
 from datetime import date, datetime, timezone
 from difflib import SequenceMatcher
-from io import BytesIO
 import re
-
-import qrcode
 import streamlit as st
 
 
@@ -150,74 +147,32 @@ def get_unread_notification_count(client, user_id):
         return 0
 
 
-def get_app_base_url():
-    base = None
-    try:
-        base = st.secrets.get("app", {}).get("base_url")
-    except Exception:
-        pass
-    if not base:
-        try:
-            base = st.context.url
-        except Exception:
-            base = None
-    if not base:
-        return None
-    return str(base).split("?", 1)[0].rstrip("/")
-
-
-def render_listing_actions(client, user, item, saved_ids, base_url):
-    """Save, share, report and block actions for a public listing."""
+def render_listing_actions(client, user, item, saved_ids):
+    """Save, report and block actions for a public listing."""
     listing_id = str(item["id"])
     owner_id = item.get("owner_id")
     is_own = owner_id == user["id"]
 
-    action_cols = st.columns([1, 1] if not is_own else [1])
     if not is_own:
-        with action_cols[0]:
-            is_saved = listing_id in saved_ids
-            if st.button(
-                "★ Saved" if is_saved else "☆ Save item",
-                key=f"save_listing_{listing_id}",
-                use_container_width=True,
-            ):
-                try:
-                    if is_saved:
-                        client.table("saved_listings").delete().eq(
-                            "user_id", user["id"]
-                        ).eq("listing_id", listing_id).execute()
-                    else:
-                        client.table("saved_listings").insert({
-                            "user_id": user["id"],
-                            "listing_id": listing_id,
-                        }).execute()
-                    st.rerun()
-                except Exception as exc:
-                    st.error("Couldn't update saved items. " + str(exc)[:220])
-
-    qr_col = action_cols[-1]
-    with qr_col:
-        with st.expander("QR & share", expanded=False):
-            if not base_url:
-                st.info("Add [app].base_url to Streamlit secrets to create shareable QR codes.")
-            else:
-                share_url = f"{base_url}?listing={listing_id}"
-                qr = qrcode.QRCode(box_size=6, border=3)
-                qr.add_data(share_url)
-                qr.make(fit=True)
-                qr_image = qr.make_image(fill_color="#172033", back_color="white").get_image()
-                buffer = BytesIO()
-                qr_image.save(buffer, format="PNG")
-                st.image(buffer.getvalue(), caption="Scan to open this FindIt listing", width=190)
-                st.download_button(
-                    "Download QR code",
-                    data=buffer.getvalue(),
-                    file_name=f"findit-{listing_id[:8]}.png",
-                    mime="image/png",
-                    key=f"download_qr_{listing_id}",
-                    use_container_width=True,
-                )
-                st.code(share_url, language=None)
+        is_saved = listing_id in saved_ids
+        if st.button(
+            "★ Saved" if is_saved else "☆ Save item",
+            key=f"save_listing_{listing_id}",
+            use_container_width=True,
+        ):
+            try:
+                if is_saved:
+                    client.table("saved_listings").delete().eq(
+                        "user_id", user["id"]
+                    ).eq("listing_id", listing_id).execute()
+                else:
+                    client.table("saved_listings").insert({
+                        "user_id": user["id"],
+                        "listing_id": listing_id,
+                    }).execute()
+                st.rerun()
+            except Exception as exc:
+                st.error("Couldn't update saved items. " + str(exc)[:220])
 
     if not is_own:
         with st.expander("Safety options", expanded=False):
