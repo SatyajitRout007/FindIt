@@ -1774,17 +1774,17 @@ def main():
                     except Exception as exc:
                         st.error(friendly_error(exc))
                 st.markdown(
-                    '<p class="fi-muted" style="text-align:center;margin-top:1rem;">New to FindIt?</p>',
-                    unsafe_allow_html=True,
-                )
-                if st.button(
-                    "Create an account",
-                    key="switch_to_signup",
-                    type="tertiary",
-                    use_container_width=True,
-                ):
-                    st.session_state["auth_view"] = "signup"
-                    st.rerun()
+                '<p class="fi-muted" style="text-align:center;margin-top:1rem;">New to FindIt?</p>',
+                unsafe_allow_html=True,
+            )
+            if st.button(
+                "Create an account",
+                key="switch_to_signup",
+                type="tertiary",
+                use_container_width=True,
+            ):
+                st.session_state["auth_view"] = "signup"
+                st.rerun()
 
         else:
             st.markdown("## New to FindIt?")
@@ -1860,17 +1860,17 @@ def main():
                         except Exception as exc:
                             st.error(friendly_error(exc))
                 st.markdown(
-                    '<p class="fi-muted" style="text-align:center;margin-top:1rem;">Already have an account?</p>',
-                    unsafe_allow_html=True,
-                )
-                if st.button(
-                    "Back to log in",
-                    key="switch_to_login",
-                    type="tertiary",
-                    use_container_width=True,
-                ):
-                    st.session_state["auth_view"] = "login"
-                    st.rerun()
+                '<p class="fi-muted" style="text-align:center;margin-top:1rem;">Already have an account?</p>',
+                unsafe_allow_html=True,
+            )
+            if st.button(
+                "Back to log in",
+                key="switch_to_login",
+                type="tertiary",
+                use_container_width=True,
+            ):
+                st.session_state["auth_view"] = "login"
+                st.rerun()
 
         st.caption(
             "FindIt uses Supabase authentication to protect your account. "
