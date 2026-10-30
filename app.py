@@ -2936,6 +2936,26 @@ def main():
                     st.write(claim.get("message", "No message"))
                     st.caption(f"Request ID: {claim.get('id')}")
 
+                    # The private detail is stored separately and RLS allows only
+                    # the listing owner to read it. Claimants never see this value.
+                    if listing and listing.get("owner_id") == user["id"]:
+                        try:
+                            private_check = (
+                                client.table("listing_verification")
+                                .select("private_detail")
+                                .eq("listing_id", claim["listing_id"])
+                                .limit(1)
+                                .execute()
+                            ).data or []
+                            if private_check:
+                                with st.expander("Private ownership check · visible only to you"):
+                                    st.info(private_check[0].get("private_detail", ""))
+                                    st.caption(
+                                        "Compare this with the claimant's message before arranging a handover."
+                                    )
+                        except Exception:
+                            pass
+
                     if claim_status == "pending":
                         new_claim_status = st.selectbox(
                             "Decision",
