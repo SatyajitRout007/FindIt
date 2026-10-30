@@ -1747,9 +1747,41 @@ def main():
             render_theme_toggle()
 
             st.divider()
-            st.markdown("**SIGNED IN AS**")
+            st.markdown("**ACCOUNT**")
             st.caption(user.get("email", "Signed in"))
+            st.caption(f"Current username: **@{user.get('username', 'member')}**")
 
+            with st.form("change_username_form"):
+                updated_username = st.text_input(
+                    "Change username",
+                    placeholder="Enter a new unique username",
+                    help="3–20 characters. Letters, numbers, dots and underscores. Usernames must be available.",
+                ).strip().lstrip("@")
+                change_username = st.form_submit_button(
+                    "Update username",
+                    use_container_width=True,
+                )
+
+                if change_username:
+                    if updated_username.lower() == user.get("username", "").lower():
+                        st.info("That's already your current username.")
+                    else:
+                        try:
+                            save_username(client, user["id"], updated_username)
+                            user["username"] = updated_username
+                            st.session_state["user"] = user
+                            st.success(f"Username changed to @{updated_username}.")
+                            st.rerun()
+                        except Exception as exc:
+                            message = str(exc).lower()
+                            if "duplicate" in message or "unique" in message or "already exists" in message:
+                                st.error("That username is already taken. Please choose an available one.")
+                            elif "username must" in message or "use only" in message:
+                                st.error(str(exc))
+                            else:
+                                st.error("Couldn't update your username. " + friendly_error(exc))
+
+            st.divider()
             st.caption(
                 "Keep personal details private. Avoid posting full addresses, "
                 "ID numbers or sensitive information."
