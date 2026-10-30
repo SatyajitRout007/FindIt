@@ -734,8 +734,8 @@ def render_admin_panel(client, user):
     m4.metric("Claims", len(all_claims))
 
     st.divider()
-    tab_listings, tab_users, tab_logs = st.tabs(
-        ["Listing moderation", "User management", "Admin activity"]
+    tab_listings, tab_users, tab_claims, tab_logs = st.tabs(
+        ["Listing moderation", "User management", "Claims review", "Admin activity"]
     )
 
     with tab_listings:
@@ -928,6 +928,53 @@ def render_admin_panel(client, user):
                                 reason, target_user_id=selected_uid
                             )
                             st.success(f"Access restored for {selected_email}.")
+                            st.rerun()
+                        except Exception as exc:
+                            st.error(friendly_error(exc))
+
+    with tab_claims:
+        st.subheader("Claims review")
+        if not all_claims:
+            st.info("There are no claims to review.")
+        for claim in all_claims:
+            listing = next(
+                (item for item in all_listings if item.get("id") == claim.get("listing_id")),
+                None,
+            )
+            listing_title = listing.get("title", "Deleted listing") if listing else "Deleted listing"
+            claim_status = claim.get("status", "pending")
+            with st.container(border=True):
+                st.markdown(f"**{listing_title}** · {claim_status.upper()}")
+                st.write(claim.get("message") or "No message provided.")
+                st.caption(
+                    f"Claim ID: {claim.get('id')} · "
+                    f"Listing ID: {claim.get('listing_id')} · "
+                    f"Claimant ID: {claim.get('claimant_id')}"
+                )
+                if claim_status == "pending":
+                    decision = st.selectbox(
+                        "Admin decision",
+                        ["pending", "accepted", "rejected"],
+                        key=f"admin_claim_decision_{claim.get('id')}",
+                    )
+                    if st.button(
+                        "Save claim decision",
+                        key=f"admin_claim_save_{claim.get('id')}",
+                    ):
+                        try:
+                            admin_client.table("claims").update(
+                                {"status": decision}
+                            ).eq("id", claim["id"]).execute()
+                            write_admin_log(
+                                admin_client, user, "claim_moderated",
+                                "Admin changed claim status",
+                                target_user_id=claim.get("claimant_id"),
+                                details={
+                                    "claim_id": str(claim.get("id")),
+                                    "new_status": decision,
+                                },
+                            )
+                            st.success("Claim status updated.")
                             st.rerun()
                         except Exception as exc:
                             st.error(friendly_error(exc))
