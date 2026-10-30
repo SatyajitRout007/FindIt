@@ -131,5 +131,18 @@ grant select, insert, update on public.profiles to authenticated;
 grant select, insert on public.conversations to authenticated;
 grant select, insert on public.messages to authenticated;
 
--- Optional: enable Supabase Realtime for messages in Database > Publications
--- or add public.messages to the supabase_realtime publication if desired.
+-- Enable database change broadcasts for the live chat.
+-- Safe to run more than once; does not change existing tables or data.
+do $
+begin
+    if not exists (
+        select 1
+        from pg_publication_tables
+        where pubname = 'supabase_realtime'
+          and schemaname = 'public'
+          and tablename = 'messages'
+    ) then
+        alter publication supabase_realtime add table public.messages;
+    end if;
+end
+$;
