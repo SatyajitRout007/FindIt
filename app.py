@@ -1734,118 +1734,143 @@ def main():
             "A community space to report lost and found items, discover possible matches, and connect with the right person.",
         )
 
-        login_col, signup_col = st.columns(2, gap="large")
+        # Show one authentication form at a time.
+        st.session_state.setdefault("auth_view", "login")
 
-        with login_col:
-            st.markdown("## Welcome back")
-            st.markdown(
-                '<p class="fi-muted">Log in to manage your listings and requests.</p>',
-                unsafe_allow_html=True,
+        if st.session_state["auth_view"] == "login":
+        st.markdown("## Welcome back")
+        st.markdown(
+            '<p class="fi-muted">Log in to manage your listings and requests.</p>',
+            unsafe_allow_html=True,
+        )
+
+        with st.form("login_form"):
+            email = st.text_input("Email address", key="login_email").strip().lower()
+            password = st.text_input(
+                "Password",
+                type="password",
+                key="login_password",
+            )
+            submitted = st.form_submit_button(
+                "Log in",
+                type="primary",
+                use_container_width=True,
             )
 
-            with st.form("login_form"):
-                email = st.text_input("Email address", key="login_email").strip().lower()
-                password = st.text_input(
-                    "Password",
-                    type="password",
-                    key="login_password",
-                )
-                submitted = st.form_submit_button(
-                    "Log in",
-                    type="primary",
-                    use_container_width=True,
-                )
+            if submitted:
+                try:
+                    response = client.auth.sign_in_with_password({
+                        "email": email,
+                        "password": password,
+                    })
 
-                if submitted:
+                    st.session_state.user = {
+                        "id": response.user.id,
+                        "email": response.user.email,
+                    }
+
+                    st.rerun()
+
+                except Exception as exc:
+                    st.error(friendly_error(exc))
+            st.markdown(
+                '<p class="fi-muted" style="text-align:center;margin-top:1rem;">New to FindIt?</p>',
+                unsafe_allow_html=True,
+            )
+            if st.button(
+                "Create an account",
+                key="switch_to_signup",
+                type="tertiary",
+                use_container_width=True,
+            ):
+                st.session_state["auth_view"] = "signup"
+                st.rerun()
+
+        else:
+        st.markdown("## New to FindIt?")
+        st.markdown(
+            '<p class="fi-muted">Create an account to publish reports and contact listing owners.</p>',
+            unsafe_allow_html=True,
+        )
+
+        with st.form("signup_form"):
+            new_username = st.text_input(
+                "Unique username",
+                placeholder="e.g. Satyajit007",
+                help="3–20 characters. Letters, numbers, dots and underscores.",
+            ).strip().lstrip("@")
+
+            new_email = st.text_input(
+                "Email address",
+                key="signup_email",
+            ).strip().lower()
+
+            new_password = st.text_input(
+                "Password (at least 8 characters)",
+                type="password",
+                key="signup_password",
+            )
+
+            confirm_password = st.text_input(
+                "Confirm password",
+                type="password",
+            )
+
+            submitted = st.form_submit_button(
+                "Create account",
+                type="primary",
+                use_container_width=True,
+            )
+
+            if submitted:
+                if not (3 <= len(new_username) <= 20) or not new_username.replace("_", "").replace(".", "").isalnum():
+                    st.error("Choose a username 3–20 characters long using letters, numbers, dots or underscores.")
+
+                elif not new_email or "@" not in new_email:
+                    st.error("Enter a valid email address.")
+
+                elif len(new_password) < 8:
+                    st.error("Use a password with at least 8 characters.")
+
+                elif new_password != confirm_password:
+                    st.error("The passwords do not match.")
+
+                else:
                     try:
-                        response = client.auth.sign_in_with_password({
-                            "email": email,
-                            "password": password,
+                        response = client.auth.sign_up({
+                            "email": new_email,
+                            "password": new_password,
+                            "options": {
+                                "data": {"username": new_username}
+                            },
                         })
 
-                        st.session_state.user = {
-                            "id": response.user.id,
-                            "email": response.user.email,
-                        }
-
-                        st.rerun()
+                        if response.session:
+                            st.session_state.user = {
+                                "id": response.user.id,
+                                "email": response.user.email,
+                            }
+                            st.success("Account created.")
+                            st.rerun()
+                        else:
+                            st.success(
+                                "Account created. Check your email for the confirmation link, then log in."
+                            )
 
                     except Exception as exc:
                         st.error(friendly_error(exc))
-
-        with signup_col:
-            st.markdown("## New to FindIt?")
             st.markdown(
-                '<p class="fi-muted">Create an account to publish reports and contact listing owners.</p>',
+                '<p class="fi-muted" style="text-align:center;margin-top:1rem;">Already have an account?</p>',
                 unsafe_allow_html=True,
             )
-
-            with st.form("signup_form"):
-                new_username = st.text_input(
-                    "Unique username",
-                    placeholder="e.g. Satyajit007",
-                    help="3–20 characters. Letters, numbers, dots and underscores.",
-                ).strip().lstrip("@")
-
-                new_email = st.text_input(
-                    "Email address",
-                    key="signup_email",
-                ).strip().lower()
-
-                new_password = st.text_input(
-                    "Password (at least 8 characters)",
-                    type="password",
-                    key="signup_password",
-                )
-
-                confirm_password = st.text_input(
-                    "Confirm password",
-                    type="password",
-                )
-
-                submitted = st.form_submit_button(
-                    "Create account",
-                    type="primary",
-                    use_container_width=True,
-                )
-
-                if submitted:
-                    if not (3 <= len(new_username) <= 20) or not new_username.replace("_", "").replace(".", "").isalnum():
-                        st.error("Choose a username 3–20 characters long using letters, numbers, dots or underscores.")
-
-                    elif not new_email or "@" not in new_email:
-                        st.error("Enter a valid email address.")
-
-                    elif len(new_password) < 8:
-                        st.error("Use a password with at least 8 characters.")
-
-                    elif new_password != confirm_password:
-                        st.error("The passwords do not match.")
-
-                    else:
-                        try:
-                            response = client.auth.sign_up({
-                                "email": new_email,
-                                "password": new_password,
-                                "options": {
-                                    "data": {"username": new_username}
-                                },
-                            })
-
-                            if response.session:
-                                st.session_state.user = {
-                                    "id": response.user.id,
-                                    "email": response.user.email,
-                                }
-                                st.success("Account created.")
-                                st.rerun()
-                            else:
-                                st.success(
-                                    "Account created. Check your email for the confirmation link, then log in."
-                                )
-
-                        except Exception as exc:
-                            st.error(friendly_error(exc))
+            if st.button(
+                "Back to log in",
+                key="switch_to_login",
+                type="tertiary",
+                use_container_width=True,
+            ):
+                st.session_state["auth_view"] = "login"
+                st.rerun()
 
         st.caption(
             "FindIt uses Supabase authentication to protect your account. "
