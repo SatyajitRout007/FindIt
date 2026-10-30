@@ -293,6 +293,81 @@ create trigger findit_search_alert_notifications
 after insert on public.listings
 for each row execute function public.findit_notify_search_alerts();
 
+-- Notify both participants when a newly published listing is a strong
+-- category/text/colour/location/date candidate for an opposite-type report.
+create or replace function public.findit_notify_possible_matches()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $findit$
+declare
+    candidate record;
+begin
+    for candidate in
+        select l.id, l.owner_id, l.title
+        from public.listings l
+        where l.status = 'open'
+          and l.id <> new.id
+          and l.owner_id <> new.owner_id
+          and l.listing_type <> new.listing_type
+          and lower(l.category) = lower(new.category)
+          and (
+              lower(l.title) like '%' || lower(new.title) || '%'
+              or lower(new.title) like '%' || lower(l.title) || '%'
+              or lower(l.description) like '%' || lower(new.title) || '%'
+              or lower(new.description) like '%' || lower(l.title) || '%'
+              or (
+                  coalesce(trim(l.color), '') <> ''
+                  and coalesce(trim(new.color), '') <> ''
+                  and lower(l.color) = lower(new.color)
+              )
+          )
+          and (
+              l.event_date is null
+              or new.event_date is null
+              or abs(l.event_date - new.event_date) <= 30
+          )
+          and (
+              lower(l.location) like '%' || lower(new.location) || '%'
+              or lower(new.location) like '%' || lower(l.location) || '%'
+          )
+    loop
+        insert into public.notifications(
+            user_id, notification_type, title, body, listing_id, event_key
+        )
+        values (
+            candidate.owner_id,
+            'match',
+            'A possible match was found',
+            'A new ' || upper(new.listing_type) || ' report may match your listing: ' || candidate.title,
+            new.id,
+            'match:' || candidate.id::text || ':' || new.id::text
+        )
+        on conflict (user_id, event_key) do nothing;
+
+        insert into public.notifications(
+            user_id, notification_type, title, body, listing_id, event_key
+        )
+        values (
+            new.owner_id,
+            'match',
+            'A possible match was found',
+            'Your new report may match this listing: ' || candidate.title,
+            candidate.id,
+            'match:' || new.id::text || ':' || candidate.id::text
+        )
+        on conflict (user_id, event_key) do nothing;
+    end loop;
+    return new;
+end;
+$findit$;
+
+drop trigger if exists findit_possible_match_notifications on public.listings;
+create trigger findit_possible_match_notifications
+after insert on public.listings
+for each row execute function public.findit_notify_possible_matches();
+
 create or replace function public.findit_notify_saved_listing_update()
 returns trigger
 language plpgsql
