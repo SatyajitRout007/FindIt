@@ -841,6 +841,54 @@ body:has(#fi-dark-theme-marker) [data-testid="stImage"] img {
     border: 1px solid #344154;
 }
 
+
+/* Dark-mode contrast fixes for Streamlit native widgets and tooltips */
+body:has(#fi-dark-theme-marker) [data-testid="stExpander"],
+body:has(#fi-dark-theme-marker) [data-testid="stExpander"] details,
+body:has(#fi-dark-theme-marker) [data-testid="stExpander"] summary,
+body:has(#fi-dark-theme-marker) [data-testid="stExpander"] summary:hover {
+    background: #182638 !important;
+    color: #edf3ff !important;
+    border-color: #34465f !important;
+}
+body:has(#fi-dark-theme-marker) [data-testid="stExpander"] summary *,
+body:has(#fi-dark-theme-marker) [data-testid="stExpander"] summary p,
+body:has(#fi-dark-theme-marker) [data-testid="stExpander"] summary span {
+    color: #edf3ff !important;
+}
+body:has(#fi-dark-theme-marker) [data-testid="stTooltipContent"],
+body:has(#fi-dark-theme-marker) [role="tooltip"],
+body:has(#fi-dark-theme-marker) [data-baseweb="tooltip"] {
+    background: #263449 !important;
+    color: #f3f6fc !important;
+    border: 1px solid #455873 !important;
+    box-shadow: 0 8px 24px rgba(0,0,0,.35) !important;
+}
+body:has(#fi-dark-theme-marker) [data-testid="stTooltipContent"] *,
+body:has(#fi-dark-theme-marker) [role="tooltip"] *,
+body:has(#fi-dark-theme-marker) [data-baseweb="tooltip"] * {
+    color: #f3f6fc !important;
+}
+body:has(#fi-dark-theme-marker) a,
+body:has(#fi-dark-theme-marker) a:visited {
+    color: #82b2ff !important;
+}
+body:has(#fi-dark-theme-marker) [data-testid="stCaptionContainer"],
+body:has(#fi-dark-theme-marker) [data-testid="stCaptionContainer"] *,
+body:has(#fi-dark-theme-marker) [data-testid="stWidgetLabel"] *,
+body:has(#fi-dark-theme-marker) small {
+    color: #b9c7da !important;
+}
+body:has(#fi-dark-theme-marker) [data-testid="stTextInput"] input,
+body:has(#fi-dark-theme-marker) [data-testid="stTextArea"] textarea {
+    caret-color: #ffffff !important;
+    -webkit-text-fill-color: #f0f4fb !important;
+}
+body:has(#fi-dark-theme-marker) [data-testid="stPopover"],
+body:has(#fi-dark-theme-marker) [data-testid="stDialog"] {
+    color: #edf3ff !important;
+}
+
 </style>
 """, unsafe_allow_html=True)
 
