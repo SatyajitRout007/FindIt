@@ -389,54 +389,6 @@ def render_notifications_page(client, user):
                         st.rerun()
 
 
-def render_map_page(listings):
-    st.markdown("### Map discovery")
-    st.caption(
-        "Only listings with optional approximate coordinates appear here. "
-        "Posters should use a nearby landmark or a broad campus area, never a home address."
-    )
-    available = [
-        item for item in listings
-        if item.get("status") == "open"
-        and item.get("approximate_lat") is not None
-        and item.get("approximate_lng") is not None
-    ]
-    if not available:
-        st.info(
-            "No listings have approximate map coordinates yet. When reporting an item, "
-            "posters can optionally add approximate latitude and longitude."
-        )
-        return
-
-    f1, f2 = st.columns(2)
-    with f1:
-        kind = st.selectbox("Report type", ["All", "Lost", "Found"], key="map_type_filter")
-    with f2:
-        category = st.selectbox(
-            "Category",
-            ["All categories"] + sorted({str(x.get("category", "Other")) for x in available}),
-            key="map_category_filter",
-        )
-    shown = [
-        x for x in available
-        if (kind == "All" or x.get("listing_type") == kind.lower())
-        and (category == "All categories" or x.get("category") == category)
-    ]
-    if shown:
-        map_data = [{
-            "lat": float(x["approximate_lat"]),
-            "lon": float(x["approximate_lng"]),
-        } for x in shown]
-        st.map(map_data, use_container_width=True)
-        for item in shown:
-            st.markdown(
-                f"**{item.get('title', 'Item')}** · {item.get('listing_type', '').upper()} "
-                f"· {item.get('location', 'Location not specified')}"
-            )
-    else:
-        st.info("No listings match those map filters.")
-
-
 def render_profile_page(client, user, listings):
     st.markdown("### Your community profile")
     profile = client.table("profiles").select("user_id, username, created_at").eq(
