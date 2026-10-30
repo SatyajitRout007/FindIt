@@ -112,7 +112,7 @@ def score_duplicate(candidate, existing):
 def find_duplicates(candidate, listings, user_id, limit=4):
     results = []
     for item in listings:
-        if item.get("owner_id") == user_id or item.get("status") != "open":
+        if item.get("status") != "open":
             continue
         score = score_duplicate(candidate, item)
         if score >= 45:
@@ -293,20 +293,22 @@ def render_smart_matches_page(user, listings, start_conversation):
         return
 
     for score, mine, other in pairs[:30]:
-        event_key = f"match:{mine['id']}:{other['id']}"
-        try:
-            client = st.session_state.get("_supabase_client")
-            if client:
-                client.table("notifications").upsert({
-                    "user_id": user["id"],
-                    "notification_type": "match",
-                    "title": "A possible match was found",
-                    "body": f"{other.get('title', 'A listing')} may match your {mine.get('title', 'report')}.",
-                    "listing_id": other["id"],
-                    "event_key": event_key,
-                }, on_conflict="user_id,event_key").execute()
-        except Exception:
-            pass
+        # Only create inbox notifications for stronger suggestions to avoid noise.
+        if score >= 65:
+            event_key = f"match:{mine['id']}:{other['id']}"
+            try:
+                client = st.session_state.get("_supabase_client")
+                if client:
+                    client.table("notifications").upsert({
+                        "user_id": user["id"],
+                        "notification_type": "match",
+                        "title": "A possible match was found",
+                        "body": f"{other.get('title', 'A listing')} may match your {mine.get('title', 'report')}.",
+                        "listing_id": other["id"],
+                        "event_key": event_key,
+                    }, on_conflict="user_id,event_key").execute()
+            except Exception:
+                pass
 
         with st.container(border=True):
             top, action = st.columns([3, 1])
@@ -510,7 +512,7 @@ def render_profile_page(client, user, listings):
     if helped >= 1:
         badges.append(("🤝", "Helpful finder", "Marked a found-item report as resolved"))
     if helped >= 3:
-        badges.append(("🏅", "Community champion", "Helped return at least three found items"))
+        badges.append(("🏅", "Community champion", "Marked at least three found-item reports as resolved"))
     if not badges:
         st.info("Your first report will unlock your first community badge.")
     else:
