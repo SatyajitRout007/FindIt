@@ -364,18 +364,44 @@ div[data-testid="stTextArea"] textarea:focus {
     font-family: 'Outfit', sans-serif;
 }
 
-/* Navigation */
-
-[data-testid="stSidebar"] [role="radiogroup"] label {
-    background: rgba(255,255,255,.50);
-    border-radius: 12px;
-    padding: 9px 12px;
-    margin-bottom: 5px;
-    transition: background .2s ease;
+/* Sidebar navigation — quiet, grouped and compact */
+[data-testid="stSidebar"] {
+    background: #f8fafc !important;
+    border-right: 1px solid #e8edf3;
 }
-
+[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p {
+    margin-bottom: 0.35rem;
+}
+[data-testid="stSidebar"] [role="radiogroup"] {
+    gap: 3px;
+}
+[data-testid="stSidebar"] [role="radiogroup"] label {
+    background: transparent !important;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    padding: 7px 10px;
+    margin: 0 0 2px 0;
+    min-height: 38px;
+    transition: background .15s ease, border-color .15s ease;
+}
 [data-testid="stSidebar"] [role="radiogroup"] label:hover {
-    background: rgba(220,233,255,.8);
+    background: #eef3f9 !important;
+    border-color: #e5ebf2;
+}
+[data-testid="stSidebar"] [role="radiogroup"] label:has(input:checked) {
+    background: #eaf1ff !important;
+    border-color: #d7e4ff;
+    color: #174ea6 !important;
+    font-weight: 600;
+}
+[data-testid="stSidebar"] [data-testid="stExpander"] {
+    border: 1px solid #e3e9f0;
+    border-radius: 12px;
+    background: #ffffff;
+}
+[data-testid="stSidebar"] hr {
+    margin: 0.8rem 0;
+    border-color: #e7edf3;
 }
 
 /* Images */
@@ -2040,36 +2066,67 @@ def main():
         st.divider()
 
         notification_count = get_unread_notification_count(client, user["id"])
-        page = st.radio(
-            "Navigation",
-            [
-                "Home & Search",
-                "Smart matches",
-                "Saved items",
-                "Notifications",
-                "Map discovery",
-                "My profile",
-                "Report an item",
-                "My dashboard",
-                "Claims inbox",
-                "Messages",
-            ] + (["Admin panel"] if admin_mode else []),
-            format_func=lambda x: {
-                "Home & Search": "⌕   Explore items",
-                "Smart matches": "✨   Smart matches",
-                "Saved items": "☆   Saved items",
-                "Notifications": f"🔔   Notifications ({notification_count})" if notification_count else "🔔   Notifications",
-                "Map discovery": "📍   Map discovery",
-                "My profile": "👤   My profile",
-                "Report an item": "＋   Report an item",
-                "My dashboard": "▦   My dashboard",
-                "Claims inbox": "✉   Claims inbox",
-                "Messages": "💬   Messages",
-                "Admin panel": "⚙   Admin panel",
-            }.get(x, x),
-            label_visibility="collapsed",
-            key="main_navigation",
-        )
+        admin_pages = ["Admin panel"] if admin_mode else []
+        nav_groups = {
+            "DISCOVER": ["Home & Search", "Smart matches", "Saved items", "Map discovery"],
+            "YOUR ACTIVITY": ["Notifications", "Report an item", "My dashboard", "Claims inbox", "Messages"],
+            "ACCOUNT": ["My profile"] + admin_pages,
+        }
+        nav_labels = {
+            "Home & Search": "⌕   Explore items",
+            "Smart matches": "✨   Smart matches",
+            "Saved items": "☆   Saved items",
+            "Notifications": f"♧   Notifications · {notification_count}" if notification_count else "♧   Notifications",
+            "Map discovery": "⌖   Map discovery",
+            "My profile": "♙   My profile",
+            "Report an item": "＋   Report an item",
+            "My dashboard": "▦   My dashboard",
+            "Claims inbox": "✉   Claims inbox",
+            "Messages": "◌   Messages",
+            "Admin panel": "⚙   Admin panel",
+        }
+
+        def sync_navigation(group_key):
+            selected = st.session_state.get(group_key)
+            if selected:
+                st.session_state["main_navigation"] = selected
+                for key, options in (
+                    ("nav_discover", nav_groups["DISCOVER"]),
+                    ("nav_activity", nav_groups["YOUR ACTIVITY"]),
+                    ("nav_account", nav_groups["ACCOUNT"]),
+                ):
+                    if key != group_key:
+                        st.session_state[key] = st.session_state["main_navigation"] if st.session_state["main_navigation"] in options else options[0]
+
+        current_page = st.session_state.get("main_navigation", "Home & Search")
+        if current_page not in sum(nav_groups.values(), []):
+            current_page = "Home & Search"
+            st.session_state["main_navigation"] = current_page
+
+        for group_title, group_key in (
+            ("DISCOVER", "nav_discover"),
+            ("YOUR ACTIVITY", "nav_activity"),
+            ("ACCOUNT", "nav_account"),
+        ):
+            options = nav_groups[group_title]
+            if group_key not in st.session_state:
+                st.session_state[group_key] = current_page if current_page in options else options[0]
+            st.markdown(
+                f'<p style="font-size:10px;font-weight:700;letter-spacing:1.25px;'
+                f'color:#8793a3;margin:16px 0 7px 9px;">{group_title}</p>',
+                unsafe_allow_html=True,
+            )
+            st.radio(
+                group_title,
+                options,
+                format_func=lambda x: nav_labels.get(x, x),
+                label_visibility="collapsed",
+                key=group_key,
+                on_change=sync_navigation,
+                args=(group_key,),
+            )
+
+        page = st.session_state.get("main_navigation", current_page)
 
         st.divider()
 
