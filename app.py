@@ -7,6 +7,11 @@ import streamlit as st
 from PIL import Image
 from supabase import create_client, Client
 
+
+# ============================================================
+# PAGE CONFIGURATION
+# ============================================================
+
 st.set_page_config(
     page_title="FindIt | Lost & Found",
     page_icon="🔎",
@@ -14,146 +19,227 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+
 # ============================================================
-# FINDIT DESIGN SYSTEM — CLEAN MINIMAL / LIGHT
+# FINDIT — LIGHT GLASSMORPHISM DESIGN SYSTEM
 # ============================================================
 
 st.markdown("""
 <style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap');
+
 :root {
     --ink: #172b4d;
-    --muted: #667085;
-    --blue: #2563eb;
-    --border: #e6eaf0;
-    --background: #f7f9fc;
+    --muted: #718096;
+    --blue: #3978ed;
+    --blue-dark: #245ac7;
+    --border: rgba(255,255,255,.85);
+    --glass: rgba(255,255,255,.70);
+    --shadow: 0 12px 40px rgba(45,75,130,.08);
 }
 
 .stApp {
-    background: var(--background);
+    background:
+        radial-gradient(ellipse at 8% 5%, rgba(151,190,255,.27), transparent 35%),
+        radial-gradient(ellipse at 95% 25%, rgba(192,177,255,.20), transparent 35%),
+        linear-gradient(135deg, #f5f8ff 0%, #edf3fc 50%, #f8faff 100%);
     color: var(--ink);
+    font-family: 'DM Sans', sans-serif;
+}
+
+html, body, [class*="css"] {
+    font-family: 'DM Sans', sans-serif;
 }
 
 .block-container {
-    max-width: 1280px;
-    padding-top: 1.5rem;
-    padding-bottom: 3rem;
+    max-width: 1380px;
+    padding-top: 2rem;
+    padding-bottom: 4rem;
 }
 
 [data-testid="stHeader"] {
-    background: rgba(247,249,252,.9);
+    background: rgba(245,248,255,.55);
+    backdrop-filter: blur(18px);
 }
 
 [data-testid="stSidebar"] {
-    background: #ffffff;
-    border-right: 1px solid var(--border);
+    background: rgba(255,255,255,.64);
+    backdrop-filter: blur(24px);
+    border-right: 1px solid rgba(255,255,255,.9);
 }
 
 [data-testid="stSidebar"] > div:first-child {
-    padding-top: 1.3rem;
+    padding-top: 1.6rem;
 }
+
+[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] {
+    color: var(--ink);
+}
+
+/* Brand */
 
 .fi-brand {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 11px;
     color: var(--ink);
-    font-size: 1.5rem;
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.8rem;
     font-weight: 800;
-    letter-spacing: -1px;
-    margin-bottom: 3px;
+    letter-spacing: -1.2px;
+    margin-bottom: 5px;
 }
 
 .fi-logo {
-    width: 40px;
-    height: 40px;
+    width: 43px;
+    height: 43px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: #eaf2ff;
-    border-radius: 12px;
-    font-size: 1.35rem;
+    background: linear-gradient(135deg, #3978ed, #8bafff);
+    color: white;
+    border-radius: 15px;
+    font-size: 1.45rem;
+    box-shadow: 0 7px 20px rgba(57,120,237,.28);
 }
 
-.fi-muted {
-    color: var(--muted);
-    font-size: .92rem;
+/* Glass cards */
+
+div[data-testid="stVerticalBlockBorderWrapper"] {
+    background: var(--glass);
+    backdrop-filter: blur(18px);
+    border: 1px solid rgba(255,255,255,.95);
+    border-radius: 22px;
+    box-shadow: var(--shadow);
+    transition: transform .25s ease, box-shadow .25s ease;
 }
+
+div[data-testid="stVerticalBlockBorderWrapper"]:hover {
+    box-shadow: 0 17px 45px rgba(45,75,130,.12);
+}
+
+div[data-testid="stForm"] {
+    background: rgba(255,255,255,.72);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255,255,255,.95);
+    border-radius: 22px;
+    padding: 1.4rem;
+    box-shadow: var(--shadow);
+}
+
+/* Hero */
 
 .fi-hero {
-    background: linear-gradient(120deg, #ffffff 0%, #edf4ff 100%);
-    border: 1px solid #dce8fb;
-    border-radius: 22px;
-    padding: 2.2rem;
-    margin-bottom: 1.3rem;
+    position: relative;
+    overflow: hidden;
+    background:
+        radial-gradient(circle at 90% 10%, rgba(255,255,255,.65), transparent 28%),
+        linear-gradient(120deg, rgba(255,255,255,.90), rgba(222,235,255,.76));
+    border: 1px solid rgba(255,255,255,.95);
+    border-radius: 30px;
+    padding: 3rem;
+    margin-bottom: 1.8rem;
+    box-shadow: 0 18px 55px rgba(48,84,150,.09);
+    animation: fiFade .65s ease both;
+}
+
+.fi-hero:after {
+    content: "🔎";
+    position: absolute;
+    right: 7%;
+    top: 50%;
+    transform: translateY(-50%) rotate(-12deg);
+    font-size: clamp(4rem, 10vw, 8rem);
+    opacity: .13;
+    pointer-events: none;
 }
 
 .fi-eyebrow {
-    color: #2563eb;
+    color: #3978ed;
     font-size: .75rem;
     font-weight: 800;
-    letter-spacing: 2px;
-    margin-bottom: 12px;
+    letter-spacing: 2.5px;
+    margin-bottom: 15px;
 }
 
 .fi-hero h1 {
     color: #172b4d;
-    font-size: clamp(2rem, 4vw, 3.2rem);
+    font-family: 'Outfit', sans-serif;
+    font-size: clamp(2.2rem, 5vw, 3.7rem);
     font-weight: 800;
-    letter-spacing: -2px;
-    line-height: 1.1;
+    letter-spacing: -2.5px;
+    line-height: 1.08;
     margin: 0;
+    max-width: 800px;
 }
 
 .fi-hero p {
-    color: #526581;
-    font-size: 1.02rem;
-    line-height: 1.65;
+    color: #64748b;
+    font-size: 1.05rem;
+    line-height: 1.8;
     max-width: 680px;
-    margin-top: 12px;
+    margin-top: 16px;
     margin-bottom: 0;
 }
 
+/* Section headings */
+
 .fi-section-title {
-    font-size: 1.4rem;
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.55rem;
     font-weight: 800;
-    letter-spacing: -.7px;
+    letter-spacing: -.8px;
     color: var(--ink);
-    margin: .4rem 0 .2rem;
+    margin: .5rem 0 .25rem;
 }
 
 .fi-section-subtitle {
     color: var(--muted);
-    margin-bottom: 1rem;
+    margin-bottom: 1.3rem;
 }
 
+/* Stats */
+
 .fi-stat {
-    background: #fff;
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 1rem 1.2rem;
-    min-height: 95px;
+    background: rgba(255,255,255,.68);
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255,255,255,.95);
+    border-radius: 21px;
+    padding: 1.35rem 1.5rem;
+    min-height: 112px;
+    box-shadow: 0 9px 28px rgba(45,75,130,.06);
+    transition: transform .25s ease, box-shadow .25s ease;
+}
+
+.fi-stat:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 15px 35px rgba(45,75,130,.12);
 }
 
 .fi-stat-label {
     color: var(--muted);
-    font-size: .83rem;
+    font-size: .88rem;
+    font-weight: 600;
 }
 
 .fi-stat-value {
     color: var(--ink);
-    font-size: 1.8rem;
+    font-family: 'Outfit', sans-serif;
+    font-size: 2rem;
     font-weight: 800;
-    margin-top: 3px;
+    margin-top: 5px;
 }
+
+/* Listing labels */
 
 .fi-chip {
     display: inline-block;
-    padding: 5px 10px;
+    padding: 6px 12px;
     border-radius: 30px;
-    font-size: .7rem;
+    font-size: .69rem;
     font-weight: 800;
-    letter-spacing: .3px;
-    background: #f2f4f7;
+    letter-spacing: .5px;
+    background: #edf2f8;
     color: #475467;
 }
 
@@ -163,65 +249,146 @@ st.markdown("""
 }
 
 .fi-found {
-    background: #eaf8ef;
+    background: #e8f8ef;
     color: #15803d;
 }
 
 .fi-open {
-    background: #eaf2ff;
-    color: #1d4ed8;
+    background: #e8f0ff;
+    color: #245ac7;
 }
 
 .fi-resolved {
-    background: #f2f4f7;
-    color: #475467;
+    background: #f0f1f4;
+    color: #667085;
 }
 
-div[data-testid="stForm"] {
-    background: #fff;
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 1.1rem;
+.fi-muted {
+    color: var(--muted);
+    font-size: .92rem;
 }
+
+/* Inputs */
 
 div[data-testid="stTextInput"] input,
 div[data-testid="stTextArea"] textarea,
-div[data-testid="stSelectbox"] div[data-baseweb="select"] > div {
-    border-radius: 10px;
+div[data-testid="stSelectbox"] div[data-baseweb="select"] > div,
+div[data-testid="stDateInput"] input {
+    background: rgba(255,255,255,.85);
+    border: 1px solid #e0e8f5;
+    border-radius: 13px;
 }
+
+div[data-testid="stTextInput"] input:focus,
+div[data-testid="stTextArea"] textarea:focus {
+    border-color: #75a1f5;
+    box-shadow: 0 0 0 3px rgba(57,120,237,.10);
+}
+
+/* Buttons */
 
 .stButton > button,
 .stFormSubmitButton > button {
-    border-radius: 10px;
-    font-weight: 650;
-    min-height: 2.6rem;
+    border-radius: 13px;
+    font-weight: 700;
+    min-height: 2.8rem;
+    transition: all .2s ease;
+}
+
+.stButton > button:hover,
+.stFormSubmitButton > button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 18px rgba(57,120,237,.13);
 }
 
 .stButton > button[kind="primary"],
 .stFormSubmitButton > button[kind="primary"] {
-    background: #2563eb;
-    border-color: #2563eb;
+    background: linear-gradient(120deg, #3978ed, #6596f5);
+    border: none;
     color: white;
 }
 
+/* Metrics */
+
 [data-testid="stMetric"] {
-    background: white;
-    border: 1px solid var(--border);
-    padding: 1rem;
-    border-radius: 15px;
+    background: rgba(255,255,255,.70);
+    backdrop-filter: blur(14px);
+    border: 1px solid rgba(255,255,255,.95);
+    padding: 1.2rem;
+    border-radius: 19px;
+    box-shadow: 0 8px 25px rgba(45,75,130,.06);
+}
+
+[data-testid="stMetricValue"] {
+    color: var(--ink);
+    font-family: 'Outfit', sans-serif;
+}
+
+/* Navigation */
+
+[data-testid="stSidebar"] [role="radiogroup"] label {
+    background: rgba(255,255,255,.50);
+    border-radius: 12px;
+    padding: 9px 12px;
+    margin-bottom: 5px;
+    transition: background .2s ease;
+}
+
+[data-testid="stSidebar"] [role="radiogroup"] label:hover {
+    background: rgba(220,233,255,.8);
+}
+
+/* Images */
+
+[data-testid="stImage"] img {
+    border-radius: 17px;
+    object-fit: cover;
+}
+
+/* Animations */
+
+@keyframes fiFade {
+    from {
+        opacity: 0;
+        transform: translateY(14px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+[data-testid="stVerticalBlock"] > div {
+    animation: fiFade .4s ease both;
 }
 
 hr {
-    border-color: var(--border);
+    border-color: rgba(190,205,228,.55);
 }
 
-@media (max-width: 700px) {
+@media (max-width: 800px) {
     .block-container {
         padding-top: 1rem;
     }
+
     .fi-hero {
-        padding: 1.35rem;
-        border-radius: 17px;
+        padding: 1.7rem;
+        border-radius: 22px;
+    }
+
+    .fi-hero:after {
+        display: none;
+    }
+
+    .fi-hero h1 {
+        font-size: 2.3rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *:before, *:after {
+        animation-duration: .01ms !important;
+        transition-duration: .01ms !important;
     }
 }
 </style>
@@ -239,6 +406,7 @@ def get_setting(section, key, env_name=None):
             return value
     except Exception:
         pass
+
     return os.getenv(env_name or key.upper())
 
 
@@ -306,10 +474,10 @@ def upload_image(client: Client, uploaded_file, user_id: str):
         return None
 
     image = Image.open(uploaded_file).convert("RGB")
-    image.thumbnail((1400, 1400))
+    image.thumbnail((1600, 1600))
 
     buffer = BytesIO()
-    image.save(buffer, format="JPEG", quality=85, optimize=True)
+    image.save(buffer, format="JPEG", quality=88, optimize=True)
 
     path = f"{user_id}/{os.urandom(8).hex()}.jpg"
 
@@ -349,6 +517,13 @@ def fetch_claims(client: Client):
 # REUSABLE UI COMPONENTS
 # ============================================================
 
+def render_brand():
+    st.markdown(
+        '<div class="fi-brand"><span class="fi-logo">🔎</span> FindIt</div>',
+        unsafe_allow_html=True,
+    )
+
+
 def render_hero(eyebrow, title, description):
     st.markdown(f"""
     <div class="fi-hero">
@@ -368,16 +543,21 @@ def render_listing_card(item, show_claim_button=False, client=None, user=None):
     status_class = "fi-open" if status == "open" else "fi-resolved"
 
     with st.container(border=True):
-        left, right = st.columns([1, 2.1], gap="large")
+        # Larger image area
+        left, right = st.columns([1.25, 1.8], gap="large")
 
         with left:
             if item.get("image_url"):
-                st.image(item["image_url"], use_container_width=True)
+                st.image(
+                    item["image_url"],
+                    use_container_width=True,
+                )
             else:
                 st.markdown(
-                    '<div style="height:170px;display:flex;align-items:center;'
-                    'justify-content:center;background:#f8fafc;border:1px dashed #d7deea;'
-                    'border-radius:14px;font-size:2rem;">📦</div>',
+                    '<div style="height:240px;display:flex;align-items:center;'
+                    'justify-content:center;background:rgba(238,244,253,.8);'
+                    'border:1px dashed #cbd8ec;border-radius:17px;'
+                    'font-size:3rem;">📦</div>',
                     unsafe_allow_html=True,
                 )
 
@@ -440,10 +620,7 @@ def main():
 
     # Configuration check
     if client is None:
-        st.markdown(
-            '<div class="fi-brand"><span class="fi-logo">🔎</span> FindIt</div>',
-            unsafe_allow_html=True,
-        )
+        render_brand()
 
         render_hero(
             "COMMUNITY LOST & FOUND",
@@ -467,15 +644,12 @@ def main():
 
     user = get_user()
 
-    # --------------------------------------------------------
+    # ========================================================
     # LOGIN AND SIGNUP
-    # --------------------------------------------------------
+    # ========================================================
 
     if not user:
-        st.markdown(
-            '<div class="fi-brand"><span class="fi-logo">🔎</span> FindIt</div>',
-            unsafe_allow_html=True,
-        )
+        render_brand()
 
         render_hero(
             "LOST SOMETHING? FOUND SOMETHING?",
@@ -494,7 +668,11 @@ def main():
 
             with st.form("login_form"):
                 email = st.text_input("Email address", key="login_email").strip().lower()
-                password = st.text_input("Password", type="password", key="login_password")
+                password = st.text_input(
+                    "Password",
+                    type="password",
+                    key="login_password",
+                )
 
                 submitted = st.form_submit_button(
                     "Log in",
@@ -527,13 +705,21 @@ def main():
             )
 
             with st.form("signup_form"):
-                new_email = st.text_input("Email address", key="signup_email").strip().lower()
+                new_email = st.text_input(
+                    "Email address",
+                    key="signup_email",
+                ).strip().lower()
+
                 new_password = st.text_input(
                     "Password (at least 8 characters)",
                     type="password",
                     key="signup_password",
                 )
-                confirm_password = st.text_input("Confirm password", type="password")
+
+                confirm_password = st.text_input(
+                    "Confirm password",
+                    type="password",
+                )
 
                 submitted = st.form_submit_button(
                     "Create account",
@@ -544,10 +730,13 @@ def main():
                 if submitted:
                     if not new_email or "@" not in new_email:
                         st.error("Enter a valid email address.")
+
                     elif len(new_password) < 8:
                         st.error("Use a password with at least 8 characters.")
+
                     elif new_password != confirm_password:
                         st.error("The passwords do not match.")
+
                     else:
                         try:
                             response = client.auth.sign_up({
@@ -571,22 +760,21 @@ def main():
                             st.error(friendly_error(exc))
 
         st.caption(
-            "Use a unique password. FindIt uses Supabase authentication to protect your account."
+            "FindIt uses Supabase authentication to protect your account. "
+            "Never share your password."
         )
+
         st.stop()
 
-    # --------------------------------------------------------
+    # ========================================================
     # SIDEBAR NAVIGATION
-    # --------------------------------------------------------
+    # ========================================================
 
     with st.sidebar:
-        st.markdown(
-            '<div class="fi-brand"><span class="fi-logo">🔎</span> FindIt</div>',
-            unsafe_allow_html=True,
-        )
+        render_brand()
 
         st.markdown(
-            '<p class="fi-muted">Community lost & found</p>',
+            '<p class="fi-muted">Your community lost & found space</p>',
             unsafe_allow_html=True,
         )
 
@@ -612,11 +800,13 @@ def main():
 
         st.divider()
 
-        st.markdown("**Signed in as**")
+        st.markdown("**SIGNED IN AS**")
         st.caption(user.get("email", "Signed in"))
 
+        st.markdown("---")
         st.caption(
-            "Never post full addresses, ID numbers, or private details in public descriptions."
+            "Keep personal details private. Avoid posting full addresses, "
+            "ID numbers or sensitive information."
         )
 
         if st.button("Log out", use_container_width=True):
@@ -629,8 +819,15 @@ def main():
         st.error("Couldn't load listings. " + friendly_error(exc))
         st.stop()
 
-    open_listings = [x for x in listings if x.get("status") == "open"]
-    my_listings = [x for x in listings if x.get("owner_id") == user["id"]]
+    open_listings = [
+        x for x in listings
+        if x.get("status") == "open"
+    ]
+
+    my_listings = [
+        x for x in listings
+        if x.get("owner_id") == user["id"]
+    ]
 
     # ========================================================
     # HOME AND SEARCH
@@ -672,8 +869,9 @@ def main():
             '<div class="fi-section-title">Explore listings</div>',
             unsafe_allow_html=True,
         )
+
         st.markdown(
-            '<p class="fi-section-subtitle">Search and filter reports to find what you are looking for.</p>',
+            '<p class="fi-section-subtitle">Search and filter community reports to find what you are looking for.</p>',
             unsafe_allow_html=True,
         )
 
@@ -698,7 +896,11 @@ def main():
                 categories = ["All categories"] + sorted(
                     set(x.get("category", "Other") for x in listings)
                 )
-                category_filter = st.selectbox("Category", categories)
+
+                category_filter = st.selectbox(
+                    "Category",
+                    categories,
+                )
 
             with f2:
                 location_filter = st.text_input(
@@ -707,9 +909,13 @@ def main():
                 )
 
             with f3:
-                open_only = st.checkbox("Open listings only", value=True)
+                open_only = st.checkbox(
+                    "Open listings only",
+                    value=True,
+                )
 
         filtered = []
+
         q = query.lower().strip()
         loc = location_filter.lower().strip()
 
@@ -728,10 +934,16 @@ def main():
             if q and q not in searchable:
                 continue
 
-            if type_filter != "All types" and item.get("listing_type") != type_filter.lower():
+            if (
+                type_filter != "All types"
+                and item.get("listing_type") != type_filter.lower()
+            ):
                 continue
 
-            if category_filter != "All categories" and item.get("category") != category_filter:
+            if (
+                category_filter != "All categories"
+                and item.get("category") != category_filter
+            ):
                 continue
 
             if loc and loc not in str(item.get("location", "")).lower():
@@ -748,7 +960,10 @@ def main():
             st.markdown(f"**{len(filtered)} result(s) found**")
 
         with action_col:
-            if st.button("＋ Report an item", use_container_width=True):
+            if st.button(
+                "＋ Report an item",
+                use_container_width=True,
+            ):
                 st.session_state["main_navigation"] = "Report an item"
                 st.rerun()
 
@@ -765,16 +980,20 @@ def main():
                 user=user,
             )
 
-        # Potential matches
+        # ----------------------------------------------------
+        # POSSIBLE MATCHES
+        # ----------------------------------------------------
+
         st.divider()
 
         st.markdown(
             '<div class="fi-section-title">Possible matches</div>',
             unsafe_allow_html=True,
         )
+
         st.markdown(
             '<p class="fi-section-subtitle">Suggested lost and found pairs based on item details. '
-            'These suggestions are not proof of ownership.</p>',
+            'Suggestions are not proof of ownership.</p>',
             unsafe_allow_html=True,
         )
 
@@ -793,6 +1012,7 @@ def main():
         ]
 
         matches = []
+
         ignored = {
             "the", "a", "an", "and", "or", "with", "my",
             "is", "it", "of", "to", "in",
@@ -802,7 +1022,10 @@ def main():
             for found in open_found:
                 score = 0
 
-                if lost.get("category") and lost.get("category") == found.get("category"):
+                if (
+                    lost.get("category")
+                    and lost.get("category") == found.get("category")
+                ):
                     score += 3
 
                 if (
@@ -813,14 +1036,25 @@ def main():
                     score += 2
 
                 lost_words = set(
-                    (lost.get("title", "") + " " + lost.get("description", "")).lower().split()
+                    (
+                        lost.get("title", "")
+                        + " "
+                        + lost.get("description", "")
+                    ).lower().split()
                 )
 
                 found_words = set(
-                    (found.get("title", "") + " " + found.get("description", "")).lower().split()
+                    (
+                        found.get("title", "")
+                        + " "
+                        + found.get("description", "")
+                    ).lower().split()
                 )
 
-                score += min(4, len((lost_words & found_words) - ignored))
+                score += min(
+                    4,
+                    len((lost_words & found_words) - ignored),
+                )
 
                 if (
                     lost.get("location")
@@ -835,7 +1069,9 @@ def main():
         matches.sort(key=lambda x: x[0], reverse=True)
 
         if not matches:
-            st.info("No strong matches found yet. New reports may reveal a match.")
+            st.info(
+                "No strong matches found yet. New reports may reveal a match."
+            )
 
         for score, lost, found in matches[:5]:
             with st.expander(
@@ -908,7 +1144,7 @@ def main():
                 description = st.text_area(
                     "Description",
                     placeholder="Brand, size, distinctive marks, etc. Avoid sensitive numbers.",
-                    height=120,
+                    height=140,
                 )
 
                 location = st.text_input(
@@ -922,6 +1158,13 @@ def main():
                     help="A clear photo can make an item easier to recognise.",
                 )
 
+                if uploaded:
+                    st.image(
+                        uploaded,
+                        caption="Image preview",
+                        use_container_width=True,
+                    )
+
                 submitted = st.form_submit_button(
                     "Publish listing",
                     type="primary",
@@ -933,7 +1176,9 @@ def main():
                         st.error("Enter an item name.")
 
                     elif len(description.strip()) < 8:
-                        st.error("Add a slightly more detailed description (at least 8 characters).")
+                        st.error(
+                            "Add a slightly more detailed description (at least 8 characters)."
+                        )
 
                     elif len(location.strip()) < 2:
                         st.error("Enter the place where it was lost or found.")
@@ -948,7 +1193,9 @@ def main():
                             payload = {
                                 "owner_id": user["id"],
                                 "listing_type": (
-                                    "lost" if listing_type == "Lost item" else "found"
+                                    "lost"
+                                    if listing_type == "Lost item"
+                                    else "found"
                                 ),
                                 "title": title.strip()[:100],
                                 "category": category,
@@ -988,11 +1235,13 @@ def main():
         ]
 
         open_mine = [
-            x for x in mine if x.get("status") == "open"
+            x for x in mine
+            if x.get("status") == "open"
         ]
 
         resolved_mine = [
-            x for x in mine if x.get("status") != "open"
+            x for x in mine
+            if x.get("status") != "open"
         ]
 
         s1, s2, s3 = st.columns(3)
@@ -1021,7 +1270,9 @@ def main():
             with st.container(border=True):
                 render_listing_card(item)
 
-                st.caption(f"Manage listing · Current status: {item_status.upper()}")
+                st.caption(
+                    f"Manage listing · Current status: {item_status.upper()}"
+                )
 
                 col1, col2 = st.columns(2)
 
@@ -1046,7 +1297,9 @@ def main():
                                     st.success("Item unlisted successfully.")
                                     st.rerun()
                                 else:
-                                    st.warning("The listing was not updated. Refresh and try again.")
+                                    st.warning(
+                                        "The listing was not updated. Refresh and try again."
+                                    )
 
                             except Exception as exc:
                                 st.error(friendly_error(exc))
@@ -1071,7 +1324,9 @@ def main():
                                     st.success("Item relisted successfully.")
                                     st.rerun()
                                 else:
-                                    st.warning("The listing was not updated. Refresh and try again.")
+                                    st.warning(
+                                        "The listing was not updated. Refresh and try again."
+                                    )
 
                             except Exception as exc:
                                 st.error(friendly_error(exc))
@@ -1114,7 +1369,10 @@ def main():
                                 )
 
                                 if result.data:
-                                    st.session_state.pop("confirm_delete_id", None)
+                                    st.session_state.pop(
+                                        "confirm_delete_id",
+                                        None,
+                                    )
                                     st.success("Listing deleted successfully.")
                                     st.rerun()
                                 else:
@@ -1132,7 +1390,10 @@ def main():
                             key=f"cancel_delete_{item_id}",
                             use_container_width=True,
                         ):
-                            st.session_state.pop("confirm_delete_id", None)
+                            st.session_state.pop(
+                                "confirm_delete_id",
+                                None,
+                            )
                             st.rerun()
 
     # ========================================================
@@ -1236,7 +1497,9 @@ def main():
 
         with tab_sent:
             if not sent:
-                st.info("You haven't requested to connect about any listings yet.")
+                st.info(
+                    "You haven't requested to connect about any listings yet."
+                )
 
             for claim in sent:
                 listing = next(
@@ -1254,21 +1517,30 @@ def main():
                     )
 
                     st.markdown(f"### {title}")
+
                     st.markdown(
                         f"**Status:** `{claim.get('status', 'pending').upper()}`"
                     )
+
                     st.write(claim.get("message", ""))
 
-    # --------------------------------------------------------
+    # ========================================================
     # FOOTER
-    # --------------------------------------------------------
+    # ========================================================
 
     st.divider()
 
-    st.caption(
-        "FindIt is a community lost-and-found tool. "
-        "Listings and suggested matches are user-submitted. "
-        "Verify ownership before returning an item."
+    st.markdown(
+        """
+        <div style="text-align:center;padding:12px;color:#8291a8;font-size:.85rem;">
+            <strong style="color:#526581;">🔎 FindIt</strong>
+            <br>
+            Helping lost belongings find their way home.
+            <br>
+            Verify ownership before returning an item.
+        </div>
+        """,
+        unsafe_allow_html=True,
     )
 
 
