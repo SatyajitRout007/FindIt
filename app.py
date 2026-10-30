@@ -417,6 +417,207 @@ hr {
         transition-duration: .01ms !important;
     }
 }
+
+/* ============================================================
+   FINDIT UI REFRESH — CLEAN, PREMIUM MARKETPLACE
+   CSS-only refresh: keeps all existing app logic and features.
+   ============================================================ */
+:root {
+    --ink: #172033;
+    --muted: #697586;
+    --blue: #315fe8;
+    --blue-dark: #244bc4;
+    --border: #e8edf4;
+    --glass: #ffffff;
+    --shadow: 0 8px 28px rgba(23, 32, 51, .055);
+}
+.stApp {
+    background: #f6f8fb !important;
+    color: var(--ink);
+}
+.block-container {
+    max-width: 1240px !important;
+    padding-top: 2.2rem !important;
+    padding-bottom: 4rem !important;
+}
+[data-testid="stHeader"] {
+    background: rgba(246,248,251,.88) !important;
+    backdrop-filter: blur(14px);
+}
+[data-testid="stSidebar"] {
+    background: #fff !important;
+    border-right: 1px solid #edf0f5 !important;
+    box-shadow: 5px 0 24px rgba(23,32,51,.025);
+}
+[data-testid="stSidebar"] > div:first-child { padding: 1.5rem 1rem; }
+.fi-brand {
+    font-size: 1.9rem !important;
+    letter-spacing: -1.4px !important;
+    margin: .25rem 0 1.4rem !important;
+}
+.fi-logo {
+    width: 44px !important;
+    height: 44px !important;
+    border-radius: 14px !important;
+    background: #315fe8 !important;
+    box-shadow: 0 7px 16px rgba(49,95,232,.2) !important;
+}
+.fi-hero {
+    background: linear-gradient(115deg, #172b4d 0%, #244b83 58%, #315fe8 100%) !important;
+    border: 0 !important;
+    border-radius: 24px !important;
+    padding: clamp(1.7rem, 4vw, 3.1rem) !important;
+    margin: .3rem 0 1.8rem !important;
+    box-shadow: 0 16px 36px rgba(28,57,105,.15) !important;
+}
+.fi-hero:after {
+    content: "⌕" !important;
+    color: #fff !important;
+    opacity: .11 !important;
+    font-size: clamp(8rem, 17vw, 13rem) !important;
+    font-weight: 800;
+    right: 6% !important;
+}
+.fi-eyebrow {
+    color: #b9d0ff !important;
+    font-size: .72rem !important;
+    letter-spacing: 2.2px !important;
+}
+.fi-hero h1 {
+    color: #fff !important;
+    font-size: clamp(2.15rem, 4.5vw, 3.45rem) !important;
+    letter-spacing: -2px !important;
+    max-width: 760px;
+}
+.fi-hero p {
+    color: rgba(255,255,255,.78) !important;
+    font-size: 1rem !important;
+    max-width: 650px;
+}
+.fi-section-title {
+    font-size: 1.45rem !important;
+    letter-spacing: -.7px !important;
+}
+.fi-section-subtitle { color: #778397 !important; }
+.fi-stat {
+    background: #fff !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 18px !important;
+    box-shadow: var(--shadow) !important;
+    padding: 1.25rem 1.4rem !important;
+}
+.fi-stat:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 13px 30px rgba(23,32,51,.08) !important;
+}
+.fi-stat-label { color: #7a8495 !important; font-size: .82rem !important; }
+.fi-stat-value { color: #172033 !important; font-size: 2.05rem !important; }
+div[data-testid="stVerticalBlockBorderWrapper"] {
+    background: #fff !important;
+    border: 1px solid #e9edf3 !important;
+    border-radius: 18px !important;
+    box-shadow: 0 5px 20px rgba(23,32,51,.035) !important;
+    backdrop-filter: none !important;
+}
+div[data-testid="stVerticalBlockBorderWrapper"]:hover {
+    box-shadow: 0 10px 28px rgba(23,32,51,.07) !important;
+}
+div[data-testid="stForm"] {
+    background: #fff !important;
+    border: 1px solid #e9edf3 !important;
+    border-radius: 18px !important;
+    box-shadow: var(--shadow) !important;
+}
+[data-testid="stMetric"] {
+    background: #fff !important;
+    border: 1px solid #e9edf3 !important;
+    border-radius: 17px !important;
+    box-shadow: var(--shadow) !important;
+}
+[data-testid="stMetricLabel"] { color: #778397 !important; }
+[data-testid="stMetricValue"] { color: #172033 !important; }
+.fi-chip {
+    padding: 6px 11px !important;
+    font-size: .66rem !important;
+    letter-spacing: .7px !important;
+}
+.fi-lost { background: #fff0ed !important; color: #c04436 !important; }
+.fi-found { background: #e9f8ef !important; color: #16834a !important; }
+.fi-open { background: #edf3ff !important; color: #315fe8 !important; }
+.fi-resolved { background: #f0f2f5 !important; color: #687386 !important; }
+div[data-testid="stTextInput"] input,
+div[data-testid="stTextArea"] textarea,
+div[data-testid="stSelectbox"] div[data-baseweb="select"] > div,
+div[data-testid="stDateInput"] input {
+    background: #fff !important;
+    border: 1px solid #dfe5ee !important;
+    border-radius: 11px !important;
+    min-height: 2.8rem;
+}
+div[data-testid="stTextInput"] input:focus,
+div[data-testid="stTextArea"] textarea:focus {
+    border-color: #7898f4 !important;
+    box-shadow: 0 0 0 3px rgba(49,95,232,.1) !important;
+}
+.stButton > button, .stFormSubmitButton > button {
+    border-radius: 11px !important;
+    min-height: 2.75rem !important;
+    font-weight: 700 !important;
+    border: 1px solid #dfe5ee !important;
+    transition: transform .18s ease, box-shadow .18s ease, background .18s ease !important;
+}
+.stButton > button:hover, .stFormSubmitButton > button:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 6px 16px rgba(23,32,51,.09) !important;
+}
+.stButton > button[kind="primary"],
+.stFormSubmitButton > button[kind="primary"] {
+    background: #315fe8 !important;
+    color: #fff !important;
+    border: 1px solid #315fe8 !important;
+}
+.stButton > button[kind="primary"]:hover,
+.stFormSubmitButton > button[kind="primary"]:hover {
+    background: #244bc4 !important;
+}
+[data-testid="stSidebar"] [role="radiogroup"] label {
+    background: #f7f9fc !important;
+    border: 1px solid transparent !important;
+    border-radius: 11px !important;
+    padding: 10px 12px !important;
+    margin: 4px 0 !important;
+}
+[data-testid="stSidebar"] [role="radiogroup"] label:hover {
+    background: #edf3ff !important;
+    border-color: #dce7ff !important;
+}
+[data-testid="stImage"] img {
+    border-radius: 14px !important;
+    object-fit: cover !important;
+}
+[data-testid="stTabs"] [data-baseweb="tab-list"] {
+    gap: 8px;
+    border-bottom: 1px solid #e8edf4;
+}
+[data-testid="stTabs"] button[role="tab"] {
+    border-radius: 10px 10px 0 0;
+    font-weight: 650;
+}
+[data-testid="stAlert"] { border-radius: 13px !important; }
+hr { border-color: #e8edf4 !important; }
+@media (max-width: 800px) {
+    .block-container { padding: 1rem 1rem 3rem !important; }
+    .fi-hero { border-radius: 18px !important; }
+    .fi-hero:after { display: none !important; }
+    .fi-hero h1 { font-size: 2.2rem !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+    *, *:before, *:after {
+        animation-duration: .01ms !important;
+        transition-duration: .01ms !important;
+    }
+}
+
 </style>
 """, unsafe_allow_html=True)
 
