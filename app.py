@@ -1726,9 +1726,6 @@ def main():
     # ========================================================
 
     if not user:
-        with st.sidebar.expander("⚙️ Settings", expanded=False):
-            st.caption("FindIt uses a clean, light appearance.")
-
         render_brand()
 
         render_hero(
