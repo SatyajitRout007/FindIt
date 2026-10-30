@@ -2017,7 +2017,7 @@ def main():
     # Determine admin status from the protected Supabase role table.
     admin_mode = is_admin_user(client, user)
 
-    # Deep links from QR codes and notifications should select Explore before
+    # Direct listing links from notifications should select Explore before
     # the navigation widget is created.
     try:
         if st.query_params.get("listing"):
