@@ -372,7 +372,6 @@ def render_notifications_page(client, user):
                 with c2:
                     if row.get("listing_id") and st.button("View listing", key=f"view_notification_{row['id']}"):
                         st.query_params["listing"] = str(row["listing_id"])
-                        st.session_state["main_navigation"] = "Home & Search"
                         st.rerun()
 
     with alerts_tab:
