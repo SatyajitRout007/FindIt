@@ -2017,6 +2017,14 @@ def main():
     # Determine admin status from the protected Supabase role table.
     admin_mode = is_admin_user(client, user)
 
+    # Deep links from QR codes and notifications should select Explore before
+    # the navigation widget is created.
+    try:
+        if st.query_params.get("listing"):
+            st.session_state["main_navigation"] = "Home & Search"
+    except Exception:
+        pass
+
     # ========================================================
     # SIDEBAR NAVIGATION
     # ========================================================
@@ -2624,10 +2632,11 @@ def main():
                                 "description": description.strip()[:1500],
                                 "location": location.strip()[:200],
                                 "event_date": event_date.isoformat(),
-                                "approximate_lat": approx_lat,
-                                "approximate_lng": approx_lng,
                                 "status": "open",
                             }
+                            if approx_lat is not None and approx_lng is not None:
+                                payload["approximate_lat"] = approx_lat
+                                payload["approximate_lng"] = approx_lng
                             photo_bytes = uploaded.getvalue() if uploaded else None
                             duplicates = [
                                 pair for pair in find_duplicates(payload, listings, user["id"])
