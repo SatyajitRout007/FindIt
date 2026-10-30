@@ -16,7 +16,6 @@ from findit_features import (
     get_saved_listing_ids,
     get_unread_notification_count,
     render_listing_actions,
-    render_map_page,
     render_notifications_page,
     render_profile_page,
     render_saved_items_page,
@@ -2110,7 +2109,7 @@ def main():
         notification_count = get_unread_notification_count(client, user["id"])
         admin_pages = ["Admin panel"] if admin_mode else []
         nav_groups = {
-            "DISCOVER": ["Home & Search", "Smart matches", "Saved items", "Map discovery"],
+            "DISCOVER": ["Home & Search", "Smart matches", "Saved items"],
             "YOUR ACTIVITY": ["Notifications", "Report an item", "My dashboard", "Claims inbox", "Messages"],
             "ACCOUNT": ["My profile"] + admin_pages,
         }
@@ -2119,7 +2118,6 @@ def main():
             "Smart matches": "✨   Smart matches",
             "Saved items": "☆   Saved items",
             "Notifications": f"♧   Notifications · {notification_count}" if notification_count else "♧   Notifications",
-            "Map discovery": "⌖   Map discovery",
             "My profile": "♙   My profile",
             "Report an item": "＋   Report an item",
             "My dashboard": "▦   My dashboard",
@@ -2154,50 +2152,6 @@ def main():
 
         st.divider()
 
-        with st.expander("⚙️ Settings", expanded=False):
-            st.divider()
-            st.markdown("**ACCOUNT**")
-            st.caption(user.get("email", "Signed in"))
-            st.caption(f"Current username: **@{user.get('username', 'member')}**")
-
-            with st.form("change_username_form"):
-                updated_username = st.text_input(
-                    "Change username",
-                    placeholder="Enter a new unique username",
-                    help="3–20 characters. Letters, numbers, dots and underscores. Usernames must be available.",
-                ).strip().lstrip("@")
-                change_username = st.form_submit_button(
-                    "Update username",
-                    use_container_width=True,
-                )
-
-                if change_username:
-                    if updated_username.lower() == user.get("username", "").lower():
-                        st.info("That's already your current username.")
-                    else:
-                        try:
-                            save_username(client, user["id"], updated_username)
-                            user["username"] = updated_username
-                            st.session_state["user"] = user
-                            st.success(f"Username changed to @{updated_username}.")
-                            st.rerun()
-                        except Exception as exc:
-                            message = str(exc).lower()
-                            if "duplicate" in message or "unique" in message or "already exists" in message:
-                                st.error("That username is already taken. Please choose an available one.")
-                            elif "username must" in message or "use only" in message:
-                                st.error(str(exc))
-                            else:
-                                st.error("Couldn't update your username. " + friendly_error(exc))
-
-            st.divider()
-            st.caption(
-                "Keep personal details private. Avoid posting full addresses, "
-                "ID numbers or sensitive information."
-            )
-
-            if st.button("Log out", use_container_width=True):
-                do_logout()
 
     # Load listings and the user's personal filters.
     try:
@@ -2462,14 +2416,6 @@ def main():
                 + friendly_error(exc)
             )
 
-    elif page == "Map discovery":
-        render_hero(
-            "EXPLORE BY AREA",
-            "Map discovery",
-            "Browse listings with approximate map locations. Exact private addresses are not shown.",
-        )
-        render_map_page(listings)
-
     elif page == "My profile":
         render_hero(
             "YOUR COMMUNITY PRESENCE",
@@ -2478,6 +2424,48 @@ def main():
         )
         try:
             render_profile_page(client, user, listings)
+
+        st.divider()
+        st.markdown("### Account settings")
+        st.caption(user.get("email", "Signed in"))
+        st.caption(f"Current username: **@{user.get('username', 'member')}**")
+
+        with st.form("change_username_form"):
+            updated_username = st.text_input(
+                "Change username",
+                placeholder="Enter a new unique username",
+                help="3–20 characters. Letters, numbers, dots and underscores. Usernames must be available.",
+            ).strip().lstrip("@")
+            change_username = st.form_submit_button(
+                "Update username",
+                use_container_width=True,
+            )
+
+            if change_username:
+                if updated_username.lower() == user.get("username", "").lower():
+                    st.info("That's already your current username.")
+                else:
+                    try:
+                        save_username(client, user["id"], updated_username)
+                        user["username"] = updated_username
+                        st.session_state["user"] = user
+                        st.success(f"Username changed to @{updated_username}.")
+                        st.rerun()
+                    except Exception as exc:
+                        message = str(exc).lower()
+                        if "duplicate" in message or "unique" in message or "already exists" in message:
+                            st.error("That username is already taken. Please choose an available one.")
+                        elif "username must" in message or "use only" in message:
+                            st.error(str(exc))
+                        else:
+                            st.error("Couldn't update your username. " + friendly_error(exc))
+
+        st.caption(
+            "Keep personal details private. Avoid posting full addresses, "
+            "ID numbers or sensitive information."
+        )
+        if st.button("Log out", key="profile_log_out", use_container_width=True):
+            do_logout()
         except Exception as exc:
             st.error(
                 "Profile features need the new FindIt feature migration. "
