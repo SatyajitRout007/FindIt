@@ -308,6 +308,31 @@ div[data-testid="stTextArea"] textarea:focus {
     color: white;
 }
 
+/* FindIt monochrome checkbox styling */
+[data-testid="stCheckbox"] input[type="checkbox"] {
+    accent-color: #222222 !important;
+}
+
+[data-testid="stCheckbox"] [data-baseweb="checkbox"] > div {
+    border-color: #222222 !important;
+}
+
+[data-testid="stCheckbox"] [data-baseweb="checkbox"] > div[aria-checked="true"],
+[data-testid="stCheckbox"] [data-baseweb="checkbox"][aria-checked="true"] > div {
+    background-color: #222222 !important;
+    border-color: #222222 !important;
+}
+
+[data-testid="stCheckbox"] [data-baseweb="checkbox"] svg {
+    color: #ffffff !important;
+    fill: #ffffff !important;
+}
+
+[data-testid="stCheckbox"] input[type="checkbox"]:focus-visible {
+    outline: 2px solid #777777 !important;
+    outline-offset: 2px;
+}
+
 /* Metrics */
 
 [data-testid="stMetric"] {
