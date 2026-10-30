@@ -11,7 +11,6 @@ from supabase import create_client, Client
 
 from findit_features import (
     find_duplicates,
-    get_app_base_url,
     get_blocked_user_ids,
     get_saved_listing_ids,
     get_unread_notification_count,
@@ -1276,7 +1275,7 @@ def render_hero(eyebrow, title, description):
 
 def render_listing_card(
     item, show_claim_button=False, client=None, user=None,
-    saved_ids=None, base_url=None, show_actions=False
+    saved_ids=None, show_actions=False
 ):
     listing_type = item.get("listing_type", "found")
     status = item.get("status", "open")
@@ -1365,7 +1364,7 @@ def render_listing_card(
 
             if client and user and (show_claim_button or show_actions):
                 render_listing_actions(
-                    client, user, item, saved_ids or set(), base_url
+                    client, user, item, saved_ids or set()
                 )
 
 
@@ -2132,7 +2131,6 @@ def main():
         if item.get("owner_id") == user["id"] or item.get("owner_id") not in blocked_user_ids
     ]
     saved_listing_ids = get_saved_listing_ids(client, user["id"])
-    app_base_url = get_app_base_url()
 
     try:
         shared_listing_id = st.query_params.get("listing")
@@ -2174,7 +2172,6 @@ def main():
                 client=client,
                 user=user,
                 saved_ids=saved_listing_ids,
-                base_url=app_base_url,
             )
 
         stat1, stat2, stat3 = st.columns(3)
@@ -2316,7 +2313,6 @@ def main():
                 client=client,
                 user=user,
                 saved_ids=saved_listing_ids,
-                base_url=app_base_url,
             )
 
         st.divider()
@@ -2366,7 +2362,6 @@ def main():
                 client=client,
                 user=user,
                 saved_ids=saved_listing_ids,
-                base_url=app_base_url,
                 show_actions=True,
             ),
         )
