@@ -845,9 +845,9 @@ body:has(#fi-dark-theme-marker) [data-testid="stImage"] img {
 
 
 def render_theme_toggle():
-    """Show FindIt's own Light/Dark switch, independent of OS theme."""
-    st.sidebar.markdown("### Appearance")
-    theme = st.sidebar.radio(
+    """Render the app's Light/Dark selector inside the Settings menu."""
+    st.markdown("**Appearance**")
+    theme = st.radio(
         "Choose theme",
         ["Light", "Dark"],
         horizontal=True,
@@ -855,7 +855,7 @@ def render_theme_toggle():
         label_visibility="collapsed",
     )
     if theme == "Dark":
-        st.sidebar.markdown(
+        st.markdown(
             '<div id="fi-dark-theme-marker" style="display:none"></div>',
             unsafe_allow_html=True,
         )
@@ -1468,8 +1468,6 @@ def main():
 
         st.stop()
 
-    render_theme_toggle()
-
     user = get_user()
 
     # ========================================================
@@ -1477,6 +1475,9 @@ def main():
     # ========================================================
 
     if not user:
+        with st.sidebar.expander("⚙️ Settings", expanded=False):
+            render_theme_toggle()
+
         render_brand()
 
         render_hero(
@@ -1631,17 +1632,20 @@ def main():
 
         st.divider()
 
-        st.markdown("**SIGNED IN AS**")
-        st.caption(user.get("email", "Signed in"))
+        with st.expander("⚙️ Settings", expanded=False):
+            render_theme_toggle()
 
-        st.markdown("---")
-        st.caption(
-            "Keep personal details private. Avoid posting full addresses, "
-            "ID numbers or sensitive information."
-        )
+            st.divider()
+            st.markdown("**SIGNED IN AS**")
+            st.caption(user.get("email", "Signed in"))
 
-        if st.button("Log out", use_container_width=True):
-            do_logout()
+            st.caption(
+                "Keep personal details private. Avoid posting full addresses, "
+                "ID numbers or sensitive information."
+            )
+
+            if st.button("Log out", use_container_width=True):
+                do_logout()
 
     # Load listings
     try:
