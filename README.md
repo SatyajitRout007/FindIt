@@ -8,7 +8,7 @@ FindIt is a beginner-friendly multi-user web app for reporting lost/found items,
 - `supabase_setup.sql` — core database tables, access policies, and image storage bucket
 - `supabase_messaging_setup.sql` — usernames, private messages, and Realtime chat
 - `supabase_features_setup.sql` — saves, notifications, search alerts, map coordinates, private verification, blocks and reports
-- `findit_features.py` — additional matching, QR, map, profile and safety UI
+- `findit_features.py` — additional matching, map, profile and safety UI
 - `.streamlit/secrets.toml.example` — configuration template
 
 ## 1. Create the Supabase backend
@@ -37,15 +37,7 @@ The expanded app includes:
 - Map discovery using optional approximate coordinates.
 - Private ownership-check details that only the listing owner can read.
 - Community profiles, contribution badges and a username directory.
-- QR codes for sharing individual listings.
 - Report/block controls, with a safety-report queue in the admin panel.
-
-**QR code setup:** The app tries to detect its own URL. For the most reliable QR links, add your deployed Streamlit URL to Cloud secrets:
-
-```toml
-[app]
-base_url = "https://YOUR-FINDIT-APP-URL"
-```
 
 Use an approximate public landmark when entering map coordinates. Do not publish home addresses or sensitive item details.
 
