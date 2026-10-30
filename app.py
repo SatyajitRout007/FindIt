@@ -846,22 +846,16 @@ body:has(#fi-dark-theme-marker) [data-testid="stImage"] img {
 
 def render_theme_toggle():
     """Show FindIt's own Light/Dark switch, independent of OS theme."""
-    st.markdown(
-        '<style>[data-testid="stSidebar"]{display:none!important;}</style>',
-        unsafe_allow_html=True,
+    st.sidebar.markdown("### Appearance")
+    theme = st.sidebar.radio(
+        "Choose theme",
+        ["Light", "Dark"],
+        horizontal=True,
+        key="fi_theme_mode",
+        label_visibility="collapsed",
     )
-    theme_col, _ = st.columns([1, 5])
-    with theme_col:
-        st.caption("APPEARANCE")
-        theme = st.radio(
-            "Choose theme",
-            ["Light", "Dark"],
-            horizontal=True,
-            key="fi_theme_mode",
-            label_visibility="collapsed",
-        )
     if theme == "Dark":
-        st.markdown(
+        st.sidebar.markdown(
             '<div id="fi-dark-theme-marker" style="display:none"></div>',
             unsafe_allow_html=True,
         )
@@ -1603,16 +1597,19 @@ def main():
     admin_mode = is_admin_user(client, user)
 
     # ========================================================
-    # TOP EXPANDABLE NAVIGATION
+    # SIDEBAR NAVIGATION
     # ========================================================
 
-    render_brand()
-    st.markdown(
-        '<p class="fi-muted">Your community lost & found space</p>',
-        unsafe_allow_html=True,
-    )
+    with st.sidebar:
+        render_brand()
 
-    with st.expander("☰  Open FindIt menu", expanded=False):
+        st.markdown(
+            '<p class="fi-muted">Your community lost & found space</p>',
+            unsafe_allow_html=True,
+        )
+
+        st.divider()
+
         page = st.radio(
             "Navigation",
             [
@@ -1630,22 +1627,21 @@ def main():
             }.get(x, x),
             label_visibility="collapsed",
             key="main_navigation",
-            horizontal=True,
         )
 
         st.divider()
-        account_col, logout_col = st.columns([4, 1])
-        with account_col:
-            st.caption("SIGNED IN AS")
-            st.caption(user.get("email", "Signed in"))
-        with logout_col:
-            if st.button("Log out", use_container_width=True):
-                do_logout()
 
+        st.markdown("**SIGNED IN AS**")
+        st.caption(user.get("email", "Signed in"))
+
+        st.markdown("---")
         st.caption(
             "Keep personal details private. Avoid posting full addresses, "
             "ID numbers or sensitive information."
         )
+
+        if st.button("Log out", use_container_width=True):
+            do_logout()
 
     # Load listings
     try:
