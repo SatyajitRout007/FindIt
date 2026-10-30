@@ -1468,7 +1468,9 @@ def main():
 
         st.stop()
 
-    render_theme_toggle()\n\n    user = get_user()
+    render_theme_toggle()
+
+    user = get_user()
 
     # ========================================================
     # LOGIN AND SIGNUP
