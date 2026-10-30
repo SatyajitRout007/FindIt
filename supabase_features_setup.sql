@@ -121,12 +121,14 @@ stable
 security definer
 set search_path = ''
 as $findit$
-    select exists (
-        select 1
-        from public.blocked_users b
-        where (b.blocker_id = user_a and b.blocked_user_id = user_b)
-           or (b.blocker_id = user_b and b.blocked_user_id = user_a)
-    );
+    select
+        (auth.uid() = user_a or auth.uid() = user_b)
+        and exists (
+            select 1
+            from public.blocked_users b
+            where (b.blocker_id = user_a and b.blocked_user_id = user_b)
+               or (b.blocker_id = user_b and b.blocked_user_id = user_a)
+        );
 $findit$;
 revoke all on function public.findit_users_blocked(uuid, uuid) from public;
 grant execute on function public.findit_users_blocked(uuid, uuid) to authenticated;
