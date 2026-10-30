@@ -205,7 +205,7 @@ def render_listing_actions(client, user, item, saved_ids, base_url):
                 qr = qrcode.QRCode(box_size=6, border=3)
                 qr.add_data(share_url)
                 qr.make(fit=True)
-                qr_image = qr.make_image(fill_color="#172033", back_color="white")
+                qr_image = qr.make_image(fill_color="#172033", back_color="white").get_image()
                 buffer = BytesIO()
                 qr_image.save(buffer, format="PNG")
                 st.image(buffer.getvalue(), caption="Scan to open this FindIt listing", width=190)
@@ -521,6 +521,53 @@ def render_profile_page(client, user, listings):
                 with st.container(border=True):
                     st.markdown(f"### {emoji} {title}")
                     st.caption(desc)
+
+    st.divider()
+    with st.expander("Community member directory", expanded=False):
+        search_member = st.text_input(
+            "Find a member by username",
+            placeholder="Search usernames...",
+            key="community_member_search",
+        ).strip().lower()
+        members = client.table("profiles").select(
+            "user_id, username, created_at"
+        ).order("created_at", desc=True).limit(100).execute().data or []
+        counts = {}
+        helpful = set()
+        for item in listings:
+            owner = item.get("owner_id")
+            if owner:
+                counts[owner] = counts.get(owner, 0) + 1
+                if item.get("listing_type") == "found" and item.get("status") == "resolved":
+                    helpful.add(owner)
+        visible_members = [
+            member for member in members
+            if member.get("username")
+            and search_member in member.get("username", "").lower()
+        ]
+        if not visible_members:
+            st.caption("No members match that username.")
+        else:
+            for member in visible_members:
+                member_id = member["user_id"]
+                if member_id == user["id"]:
+                    continue
+                member_name = member.get("username") or "FindIt member"
+                member_badges = []
+                if counts.get(member_id, 0) >= 5:
+                    member_badges.append("🌟 Active member")
+                if member_id in helpful:
+                    member_badges.append("🤝 Helpful finder")
+                with st.container(border=True):
+                    st.markdown(f"**@{member_name}**")
+                    st.caption(
+                        f"{counts.get(member_id, 0)} public report(s) · "
+                        f"Member since {str(member.get('created_at', ''))[:10]}"
+                    )
+                    if member_badges:
+                        st.caption(" · ".join(member_badges))
+                    else:
+                        st.caption("Community member")
 
     st.divider()
     st.markdown("**Blocked accounts**")
