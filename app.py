@@ -375,11 +375,19 @@ div[data-testid="stTextArea"] textarea:focus {
 [data-testid="stSidebar"] [role="radiogroup"] {
     gap: 3px;
 }
-/* Hide Streamlit radio indicators; keep the whole row clickable. */
-[data-testid="stSidebar"] [role="radiogroup"] label [data-baseweb="radio"],
+/* Remove the radio-circle column from Streamlit's sidebar options. */
+[data-testid="stSidebar"] [role="radiogroup"] label > div:first-child,
+[data-testid="stSidebar"] [role="radiogroup"] label [role="radio"],
 [data-testid="stSidebar"] [role="radiogroup"] label input[type="radio"],
-[data-testid="stSidebar"] [role="radiogroup"] label > div:first-child > div:first-child {
+[data-testid="stSidebar"] [role="radiogroup"] label svg {
     display: none !important;
+}
+[data-testid="stSidebar"] [role="radiogroup"] label {
+    gap: 0 !important;
+}
+[data-testid="stSidebar"] [role="radiogroup"] label > div:last-child {
+    margin-left: 0 !important;
+    padding-left: 0 !important;
 }
 [data-testid="stSidebar"] [role="radiogroup"] label {
     background: transparent !important;
