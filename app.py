@@ -1453,6 +1453,16 @@ def render_admin_panel(client, user):
         st.error("Could not load admin data: " + friendly_error(exc))
         return
 
+    try:
+        all_reports = (
+            admin_client.table("user_reports")
+            .select("*")
+            .order("created_at", desc=True)
+            .execute()
+        ).data or []
+    except Exception:
+        all_reports = []
+
     active_listings = [x for x in all_listings if x.get("status") == "open"]
     suspended_users = [
         u for u in auth_users
@@ -1466,8 +1476,8 @@ def render_admin_panel(client, user):
     m4.metric("Claims", len(all_claims))
 
     st.divider()
-    tab_listings, tab_users, tab_claims, tab_logs = st.tabs(
-        ["Listing moderation", "User management", "Claims review", "Admin activity"]
+    tab_listings, tab_users, tab_claims, tab_safety, tab_logs = st.tabs(
+        ["Listing moderation", "User management", "Claims review", "Safety reports", "Admin activity"]
     )
 
     with tab_listings:
@@ -1710,6 +1720,50 @@ def render_admin_panel(client, user):
                             st.rerun()
                         except Exception as exc:
                             st.error(friendly_error(exc))
+
+    with tab_safety:
+        st.subheader("Community safety reports")
+        if not all_reports:
+            st.info("No safety reports are waiting for review.")
+        for report in all_reports:
+            with st.container(border=True):
+                st.markdown(f"**{report.get('reason', 'Community report')}**")
+                st.caption(
+                    f"Status: {report.get('status', 'open').upper()} · "
+                    f"Submitted: {str(report.get('created_at', ''))[:16]}"
+                )
+                st.write(report.get("details") or "No additional details supplied.")
+                st.caption(
+                    f"Reporter: {report.get('reporter_id')} · "
+                    f"Reported user: {report.get('reported_user_id') or 'Not specified'} · "
+                    f"Listing: {report.get('listing_id') or 'Not specified'}"
+                )
+                new_status = st.selectbox(
+                    "Review status",
+                    ["open", "reviewed", "dismissed"],
+                    index=["open", "reviewed", "dismissed"].index(
+                        report.get("status", "open")
+                        if report.get("status", "open") in {"open", "reviewed", "dismissed"}
+                        else "open"
+                    ),
+                    key=f"safety_report_status_{report['id']}",
+                )
+                if st.button("Save report status", key=f"save_safety_report_{report['id']}"):
+                    try:
+                        admin_client.table("user_reports").update({
+                            "status": new_status
+                        }).eq("id", report["id"]).execute()
+                        write_admin_log(
+                            admin_client, user, "safety_report_reviewed",
+                            "Admin updated community safety report",
+                            target_user_id=report.get("reported_user_id"),
+                            target_listing_id=report.get("listing_id"),
+                            details={"report_id": str(report["id"]), "status": new_status},
+                        )
+                        st.success("Safety report updated.")
+                        st.rerun()
+                    except Exception as exc:
+                        st.error(friendly_error(exc))
 
     with tab_logs:
         st.subheader("Recent admin activity")
