@@ -21,7 +21,7 @@ create table if not exists public.admin_action_logs (
     admin_user_id uuid references auth.users(id) on delete set null,
     action text not null,
     target_user_id uuid,
-    target_listing_id bigint,
+    target_listing_id text,
     reason text,
     details jsonb not null default '{}'::jsonb,
     created_at timestamptz not null default now()
