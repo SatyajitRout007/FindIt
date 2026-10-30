@@ -842,6 +842,46 @@ body:has(#fi-dark-theme-marker) [data-testid="stImage"] img {
 }
 
 
+/* Dark-mode form fields: override browser autofill and BaseWeb wrappers */
+body:has(#fi-dark-theme-marker) [data-testid="stTextInput"] > div,
+body:has(#fi-dark-theme-marker) [data-testid="stTextInput"] [data-baseweb="input"],
+body:has(#fi-dark-theme-marker) [data-testid="stTextInput"] [data-baseweb="base-input"],
+body:has(#fi-dark-theme-marker) [data-testid="stTextArea"] [data-baseweb="textarea"],
+body:has(#fi-dark-theme-marker) [data-testid="stDateInput"] [data-baseweb="input"] {
+    background: #151e2b !important;
+    border-color: #435168 !important;
+}
+body:has(#fi-dark-theme-marker) [data-testid="stTextInput"] input,
+body:has(#fi-dark-theme-marker) [data-testid="stTextInput"] input:focus,
+body:has(#fi-dark-theme-marker) [data-testid="stTextInput"] input:-webkit-autofill,
+body:has(#fi-dark-theme-marker) [data-testid="stTextInput"] input:-webkit-autofill:hover,
+body:has(#fi-dark-theme-marker) [data-testid="stTextInput"] input:-webkit-autofill:focus,
+body:has(#fi-dark-theme-marker) [data-testid="stTextInput"] input:-webkit-autofill:active,
+body:has(#fi-dark-theme-marker) [data-testid="stTextArea"] textarea,
+body:has(#fi-dark-theme-marker) [data-testid="stDateInput"] input {
+    background-color: #151e2b !important;
+    color: #f4f7ff !important;
+    -webkit-text-fill-color: #f4f7ff !important;
+    caret-color: #ffffff !important;
+    border-color: #435168 !important;
+}
+body:has(#fi-dark-theme-marker) [data-testid="stTextInput"] input:-webkit-autofill,
+body:has(#fi-dark-theme-marker) [data-testid="stTextInput"] input:-webkit-autofill:hover,
+body:has(#fi-dark-theme-marker) [data-testid="stTextInput"] input:-webkit-autofill:focus,
+body:has(#fi-dark-theme-marker) [data-testid="stTextInput"] input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 1000px #151e2b inset !important;
+    box-shadow: 0 0 0 1000px #151e2b inset !important;
+    transition: background-color 99999s ease-out 0s !important;
+}
+body:has(#fi-dark-theme-marker) [data-testid="stTextInput"] button,
+body:has(#fi-dark-theme-marker) [data-testid="stTextInput"] svg {
+    color: #dce7f7 !important;
+    fill: currentColor;
+}
+body:has(#fi-dark-theme-marker) [data-testid="stTextInput"] [data-baseweb="input"] > div {
+    background: transparent !important;
+}
+
 /* Dark-mode contrast fixes for Streamlit native widgets and tooltips */
 body:has(#fi-dark-theme-marker) [data-testid="stExpander"],
 body:has(#fi-dark-theme-marker) [data-testid="stExpander"] details,
