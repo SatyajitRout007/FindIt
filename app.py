@@ -1338,7 +1338,7 @@ def render_listing_card(
                     with st.form(f"claim_{item['id']}"):
                         message = st.text_area(
                             "Message to the owner",
-                            placeholder="Describe a detail that helps verify ownership. Keep private details to yourself.",
+                            placeholder="Describe a detail that is not shown in the public listing to help the owner verify your claim.",
                             key=f"claim_message_{item['id']}",
                         )
 
@@ -2556,6 +2556,28 @@ def main():
                     placeholder="e.g. Block B library, near the main gate",
                 )
 
+                private_detail = st.text_area(
+                    "Private ownership check (only you can see this)",
+                    placeholder="Keep one distinctive identifying detail private. Do not enter passwords, ID numbers or sensitive data.",
+                    height=85,
+                    help="This detail is stored separately and is visible only to the listing owner.",
+                )
+
+                st.markdown("**Approximate map location (optional)**")
+                coord_a, coord_b = st.columns(2)
+                with coord_a:
+                    approximate_lat_text = st.text_input(
+                        "Latitude",
+                        placeholder="e.g. 12.9716",
+                        help="Use an approximate public landmark, not a private address.",
+                    )
+                with coord_b:
+                    approximate_lng_text = st.text_input(
+                        "Longitude",
+                        placeholder="e.g. 77.5946",
+                        help="Both coordinates are optional. Add both or leave both blank.",
+                    )
+
                 uploaded = st.file_uploader(
                     "Item photo (JPG, JPEG or PNG)",
                     type=["jpg", "jpeg", "png"],
@@ -2578,49 +2600,94 @@ def main():
                 if submitted:
                     if len(title.strip()) < 2:
                         st.error("Enter an item name.")
-
                     elif len(description.strip()) < 8:
-                        st.error(
-                            "Add a slightly more detailed description (at least 8 characters)."
-                        )
-
+                        st.error("Add a slightly more detailed description (at least 8 characters).")
                     elif len(location.strip()) < 2:
                         st.error("Enter the place where it was lost or found.")
-
+                    elif bool(approximate_lat_text.strip()) != bool(approximate_lng_text.strip()):
+                        st.error("Enter both approximate coordinates or leave both blank.")
                     else:
                         try:
-                            image_url = (
-                                upload_image(client, uploaded, user["id"])
-                                if uploaded else None
-                            )
+                            approx_lat = float(approximate_lat_text) if approximate_lat_text.strip() else None
+                            approx_lng = float(approximate_lng_text) if approximate_lng_text.strip() else None
+                            if approx_lat is not None and not (-90 <= approx_lat <= 90):
+                                raise ValueError("Latitude must be between -90 and 90.")
+                            if approx_lng is not None and not (-180 <= approx_lng <= 180):
+                                raise ValueError("Longitude must be between -180 and 180.")
 
                             payload = {
                                 "owner_id": user["id"],
-                                "listing_type": (
-                                    "lost"
-                                    if listing_type == "Lost item"
-                                    else "found"
-                                ),
+                                "listing_type": "lost" if listing_type == "Lost item" else "found",
                                 "title": title.strip()[:100],
                                 "category": category,
                                 "color": color.strip()[:120],
                                 "description": description.strip()[:1500],
                                 "location": location.strip()[:200],
                                 "event_date": event_date.isoformat(),
-                                "image_url": image_url,
+                                "approximate_lat": approx_lat,
+                                "approximate_lng": approx_lng,
                                 "status": "open",
                             }
-
-                            client.table("listings").insert(payload).execute()
-
-                            st.success("Your listing has been published!")
-                            st.rerun()
-
+                            photo_bytes = uploaded.getvalue() if uploaded else None
+                            duplicates = [
+                                pair for pair in find_duplicates(payload, listings, user["id"])
+                                if pair[0] >= 60
+                            ]
+                            if duplicates:
+                                st.session_state["pending_listing"] = {
+                                    "payload": payload,
+                                    "photo_bytes": photo_bytes,
+                                    "private_detail": private_detail.strip()[:500],
+                                    "duplicates": duplicates,
+                                }
+                                st.rerun()
+                            else:
+                                publish_listing_record(
+                                    client, payload, photo_bytes, private_detail
+                                )
+                                st.success("Your listing has been published!")
+                                st.rerun()
+                        except ValueError as exc:
+                            st.error(str(exc))
                         except Exception as exc:
                             st.error(
                                 "Could not publish the listing. "
                                 + friendly_error(exc)
                             )
+
+        pending_listing = st.session_state.get("pending_listing")
+        if pending_listing and pending_listing.get("payload", {}).get("owner_id") == user["id"]:
+            st.warning(
+                "FindIt found reports that look similar. Check them before publishing "
+                "to avoid creating a duplicate. This is only a similarity warning."
+            )
+            for duplicate_score, duplicate_item in pending_listing.get("duplicates", []):
+                st.markdown(
+                    f"**{duplicate_score}% similar:** {duplicate_item.get('title', 'Listing')} "
+                    f"· {duplicate_item.get('listing_type', '').upper()} "
+                    f"· {duplicate_item.get('location', 'Unknown location')}"
+                )
+            confirm_col, cancel_col = st.columns(2)
+            with confirm_col:
+                if st.button("Publish anyway", type="primary", key="confirm_duplicate_publish",
+                             use_container_width=True):
+                    try:
+                        publish_listing_record(
+                            client,
+                            pending_listing["payload"],
+                            pending_listing.get("photo_bytes"),
+                            pending_listing.get("private_detail", ""),
+                        )
+                        st.session_state.pop("pending_listing", None)
+                        st.success("Your listing has been published.")
+                        st.rerun()
+                    except Exception as exc:
+                        st.error("Could not publish the listing. " + friendly_error(exc))
+            with cancel_col:
+                if st.button("Cancel report", key="cancel_duplicate_publish",
+                             use_container_width=True):
+                    st.session_state.pop("pending_listing", None)
+                    st.rerun()
 
     # ========================================================
     # MY DASHBOARD — UNLIST / RELIST / DELETE
