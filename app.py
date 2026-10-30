@@ -1178,6 +1178,7 @@ def do_logout():
         "user",
         "page",
         "confirm_delete_id",
+        "pending_listing",
         "_supabase_client",
         "main_navigation",
     ):
@@ -2318,112 +2319,20 @@ def main():
                 base_url=app_base_url,
             )
 
-        # ----------------------------------------------------
-        # POSSIBLE MATCHES
-        # ----------------------------------------------------
-
         st.divider()
-
-        st.markdown(
-            '<div class="fi-section-title">Possible matches</div>',
-            unsafe_allow_html=True,
-        )
-
-        st.markdown(
-            '<p class="fi-section-subtitle">Suggested lost and found pairs based on item details. '
-            'Suggestions are not proof of ownership.</p>',
-            unsafe_allow_html=True,
-        )
-
-        open_lost = [
-            x for x in listings
-            if x.get("listing_type") == "lost"
-            and x.get("status") == "open"
-            and x.get("owner_id") != user["id"]
-        ]
-
-        open_found = [
-            x for x in listings
-            if x.get("listing_type") == "found"
-            and x.get("status") == "open"
-            and x.get("owner_id") != user["id"]
-        ]
-
-        matches = []
-
-        ignored = {
-            "the", "a", "an", "and", "or", "with", "my",
-            "is", "it", "of", "to", "in",
-        }
-
-        for lost in open_lost:
-            for found in open_found:
-                score = 0
-
-                if (
-                    lost.get("category")
-                    and lost.get("category") == found.get("category")
-                ):
-                    score += 3
-
-                if (
-                    lost.get("color")
-                    and found.get("color")
-                    and lost["color"].lower() == found["color"].lower()
-                ):
-                    score += 2
-
-                lost_words = set(
-                    (
-                        lost.get("title", "")
-                        + " "
-                        + lost.get("description", "")
-                    ).lower().split()
-                )
-
-                found_words = set(
-                    (
-                        found.get("title", "")
-                        + " "
-                        + found.get("description", "")
-                    ).lower().split()
-                )
-
-                score += min(
-                    4,
-                    len((lost_words & found_words) - ignored),
-                )
-
-                if (
-                    lost.get("location")
-                    and found.get("location")
-                    and lost["location"].lower() == found["location"].lower()
-                ):
-                    score += 1
-
-                if score >= 3:
-                    matches.append((score, lost, found))
-
-        matches.sort(key=lambda x: x[0], reverse=True)
-
-        if not matches:
-            st.info(
-                "No strong matches found yet. New reports may reveal a match."
+        with st.container(border=True):
+            st.markdown("### Find a possible match for your report")
+            st.caption(
+                "FindIt's matching engine compares your own open reports with "
+                "opposite lost/found reports using item details, colour, location and date."
             )
-
-        for score, lost, found in matches[:5]:
-            with st.expander(
-                f"Possible match · {lost['title']} ↔ {found['title']} · Score {score}"
+            if st.button(
+                "✨ View my smart matches",
+                key="home_smart_matches",
+                type="primary",
             ):
-                left, right = st.columns(2)
-
-                with left:
-                    st.markdown("**Lost report**")
-                    render_listing_card(lost)
-
-                with right:
-                    st.markdown("**Found report**")
-                    render_listing_card(found)
+                st.session_state["main_navigation"] = "Smart matches"
+                st.rerun()
 
     # ========================================================
     # ADDITIONAL COMMUNITY FEATURES
