@@ -1,19 +1,11 @@
 
-import json
 import os
 from datetime import date
 from io import BytesIO
 
 import streamlit as st
 
-# Compatibility for streamlit-cookies-manager, which still decorates a helper
-# with the removed st.cache API. Its helper returns key bytes, so cache_data
-# is the appropriate modern replacement.
-if not hasattr(st, "cache"):
-    st.cache = st.cache_data
-
 from PIL import Image
-from streamlit_cookies_manager import EncryptedCookieManager
 from supabase import create_client, Client
 
 
@@ -474,82 +466,11 @@ def friendly_error(exc):
     return message[:400]
 
 
-def get_cookie_manager():
-    """Create an encrypted, browser-persistent cookie manager."""
-    password = get_setting("findit_auth", "cookie_password", "FINDIT_COOKIE_PASSWORD")
-    if not password or len(str(password)) < 32:
-        return None
-
-    if st.session_state.get("_findit_cookie_manager") is None:
-        st.session_state["_findit_cookie_manager"] = EncryptedCookieManager(
-            prefix="findit/",
-            password=str(password),
-        )
-
-    return st.session_state["_findit_cookie_manager"]
-
-
-def save_persistent_session(cookies, session):
-    """Store only the encrypted Supabase token pair, never the user's password."""
-    if not session:
-        return
-
-    access_token = getattr(session, "access_token", None)
-    refresh_token = getattr(session, "refresh_token", None)
-
-    if access_token and refresh_token:
-        cookies["supabase_session"] = json.dumps({
-            "access_token": access_token,
-            "refresh_token": refresh_token,
-        })
-        cookies.save()
-
-
-def clear_persistent_session(cookies):
-    try:
-        if "supabase_session" in cookies:
-            del cookies["supabase_session"]
-            cookies.save()
-    except Exception:
-        pass
-
-
-def restore_persistent_session(client, cookies):
-    """Restore a Supabase session from the encrypted browser cookie."""
-    raw_session = cookies.get("supabase_session", "")
-    if not raw_session:
-        return None
-
-    try:
-        saved = json.loads(raw_session)
-        access_token = saved.get("access_token")
-        refresh_token = saved.get("refresh_token")
-        if not access_token or not refresh_token:
-            raise ValueError("Saved session is incomplete")
-
-        client.auth.set_session(access_token, refresh_token)
-        auth_user = client.auth.get_user()
-        user_obj = getattr(auth_user, "user", None)
-        if not user_obj:
-            raise ValueError("Saved session is no longer valid")
-
-        current_session = client.auth.get_session()
-        save_persistent_session(cookies, current_session)
-
-        return {
-            "id": user_obj.id,
-            "email": user_obj.email,
-        }
-    except Exception:
-        clear_persistent_session(cookies)
-        return None
-
-
 def get_user():
     return st.session_state.get("user")
 
 
-def do_logout(cookies):
+def do_logout():
     client = st.session_state.get("_supabase_client")
 
     try:
@@ -557,8 +478,6 @@ def do_logout(cookies):
             client.auth.sign_out()
     except Exception:
         pass
-
-    clear_persistent_session(cookies)
 
     for key in (
         "user",
@@ -570,7 +489,6 @@ def do_logout(cookies):
         st.session_state.pop(key, None)
 
     st.rerun()
-
 
 # ============================================================
 # IMAGE UPLOADS AND DATABASE FUNCTIONS
@@ -1084,18 +1002,6 @@ def render_admin_panel(client, user):
 # ============================================================
 
 def main():
-    cookies = get_cookie_manager()
-    if cookies is None:
-        st.error(
-            "Persistent login is not configured. Add a strong cookie password "
-            "under [findit_auth] in Streamlit Community Cloud Secrets."
-        )
-        st.code('[findit_auth]\\ncookie_password = "PASTE_A_RANDOM_SECRET_OF_AT_LEAST_32_CHARACTERS"')
-        st.stop()
-
-    if not cookies.ready():
-        st.stop()
-
     client = supabase_client()
 
     # Configuration check
@@ -1123,10 +1029,6 @@ def main():
         st.stop()
 
     user = get_user()
-    if not user:
-        user = restore_persistent_session(client, cookies)
-        if user:
-            st.session_state.user = user
 
     # ========================================================
     # LOGIN AND SIGNUP
@@ -1157,12 +1059,6 @@ def main():
                     type="password",
                     key="login_password",
                 )
-                remember_me = st.checkbox(
-                    "Remember me on this device",
-                    value=True,
-                    help="Keeps you signed in on this browser. Avoid enabling this on shared devices.",
-                )
-
                 submitted = st.form_submit_button(
                     "Log in",
                     type="primary",
@@ -1180,11 +1076,6 @@ def main():
                             "id": response.user.id,
                             "email": response.user.email,
                         }
-
-                        if remember_me:
-                            save_persistent_session(cookies, response.session)
-                        else:
-                            clear_persistent_session(cookies)
 
                         st.rerun()
 
@@ -1243,7 +1134,6 @@ def main():
                                     "id": response.user.id,
                                     "email": response.user.email,
                                 }
-                                save_persistent_session(cookies, response.session)
                                 st.success("Account created.")
                                 st.rerun()
                             else:
@@ -1309,7 +1199,7 @@ def main():
         )
 
         if st.button("Log out", use_container_width=True):
-            do_logout(cookies)
+            do_logout()
 
     # Load listings
     try:
