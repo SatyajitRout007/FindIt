@@ -1,3 +1,4 @@
+
 import os
 from datetime import date
 from io import BytesIO
@@ -6,19 +7,230 @@ import streamlit as st
 from PIL import Image
 from supabase import create_client, Client
 
-st.set_page_config(page_title="FindIt | Lost & Found", page_icon="🔎", layout="wide")
+st.set_page_config(
+    page_title="FindIt | Lost & Found",
+    page_icon="🔎",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
+
+# ============================================================
+# FINDIT DESIGN SYSTEM — CLEAN MINIMAL / LIGHT
+# ============================================================
 
 st.markdown("""
 <style>
-.block-container {padding-top: 2rem; padding-bottom: 3rem; max-width: 1200px;}
-.hero {padding: 1.5rem 1.7rem; border-radius: 18px; background: linear-gradient(120deg,#102a43,#2463a6); color: white; margin-bottom: 1.2rem;}
-.hero h1 {color:white; margin:0; font-size:2.5rem;}
-.hero p {color:#e5efff; margin:.35rem 0 0 0;}
-.small-muted {color: #667085; font-size: .9rem;}
-.item-card {border: 1px solid #e5e7eb; border-radius: 14px; padding: 12px; margin-bottom: 12px;}
+:root {
+    --ink: #172b4d;
+    --muted: #667085;
+    --blue: #2563eb;
+    --border: #e6eaf0;
+    --background: #f7f9fc;
+}
+
+.stApp {
+    background: var(--background);
+    color: var(--ink);
+}
+
+.block-container {
+    max-width: 1280px;
+    padding-top: 1.5rem;
+    padding-bottom: 3rem;
+}
+
+[data-testid="stHeader"] {
+    background: rgba(247,249,252,.9);
+}
+
+[data-testid="stSidebar"] {
+    background: #ffffff;
+    border-right: 1px solid var(--border);
+}
+
+[data-testid="stSidebar"] > div:first-child {
+    padding-top: 1.3rem;
+}
+
+.fi-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--ink);
+    font-size: 1.5rem;
+    font-weight: 800;
+    letter-spacing: -1px;
+    margin-bottom: 3px;
+}
+
+.fi-logo {
+    width: 40px;
+    height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #eaf2ff;
+    border-radius: 12px;
+    font-size: 1.35rem;
+}
+
+.fi-muted {
+    color: var(--muted);
+    font-size: .92rem;
+}
+
+.fi-hero {
+    background: linear-gradient(120deg, #ffffff 0%, #edf4ff 100%);
+    border: 1px solid #dce8fb;
+    border-radius: 22px;
+    padding: 2.2rem;
+    margin-bottom: 1.3rem;
+}
+
+.fi-eyebrow {
+    color: #2563eb;
+    font-size: .75rem;
+    font-weight: 800;
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+}
+
+.fi-hero h1 {
+    color: #172b4d;
+    font-size: clamp(2rem, 4vw, 3.2rem);
+    font-weight: 800;
+    letter-spacing: -2px;
+    line-height: 1.1;
+    margin: 0;
+}
+
+.fi-hero p {
+    color: #526581;
+    font-size: 1.02rem;
+    line-height: 1.65;
+    max-width: 680px;
+    margin-top: 12px;
+    margin-bottom: 0;
+}
+
+.fi-section-title {
+    font-size: 1.4rem;
+    font-weight: 800;
+    letter-spacing: -.7px;
+    color: var(--ink);
+    margin: .4rem 0 .2rem;
+}
+
+.fi-section-subtitle {
+    color: var(--muted);
+    margin-bottom: 1rem;
+}
+
+.fi-stat {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1rem 1.2rem;
+    min-height: 95px;
+}
+
+.fi-stat-label {
+    color: var(--muted);
+    font-size: .83rem;
+}
+
+.fi-stat-value {
+    color: var(--ink);
+    font-size: 1.8rem;
+    font-weight: 800;
+    margin-top: 3px;
+}
+
+.fi-chip {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 30px;
+    font-size: .7rem;
+    font-weight: 800;
+    letter-spacing: .3px;
+    background: #f2f4f7;
+    color: #475467;
+}
+
+.fi-lost {
+    background: #fff0ed;
+    color: #b42318;
+}
+
+.fi-found {
+    background: #eaf8ef;
+    color: #15803d;
+}
+
+.fi-open {
+    background: #eaf2ff;
+    color: #1d4ed8;
+}
+
+.fi-resolved {
+    background: #f2f4f7;
+    color: #475467;
+}
+
+div[data-testid="stForm"] {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.1rem;
+}
+
+div[data-testid="stTextInput"] input,
+div[data-testid="stTextArea"] textarea,
+div[data-testid="stSelectbox"] div[data-baseweb="select"] > div {
+    border-radius: 10px;
+}
+
+.stButton > button,
+.stFormSubmitButton > button {
+    border-radius: 10px;
+    font-weight: 650;
+    min-height: 2.6rem;
+}
+
+.stButton > button[kind="primary"],
+.stFormSubmitButton > button[kind="primary"] {
+    background: #2563eb;
+    border-color: #2563eb;
+    color: white;
+}
+
+[data-testid="stMetric"] {
+    background: white;
+    border: 1px solid var(--border);
+    padding: 1rem;
+    border-radius: 15px;
+}
+
+hr {
+    border-color: var(--border);
+}
+
+@media (max-width: 700px) {
+    .block-container {
+        padding-top: 1rem;
+    }
+    .fi-hero {
+        padding: 1.35rem;
+        border-radius: 17px;
+    }
+}
 </style>
 """, unsafe_allow_html=True)
 
+
+# ============================================================
+# SUPABASE AND AUTHENTICATION
+# ============================================================
 
 def get_setting(section, key, env_name=None):
     try:
@@ -31,14 +243,15 @@ def get_setting(section, key, env_name=None):
 
 
 def supabase_client():
-    # Keep the authenticated Supabase client per Streamlit browser session.
-    # A globally cached client could mix authentication state between users.
     if st.session_state.get("_supabase_client") is not None:
         return st.session_state["_supabase_client"]
+
     url = get_setting("supabase", "url", "SUPABASE_URL")
     key = get_setting("supabase", "anon_key", "SUPABASE_ANON_KEY")
+
     if not url or not key:
         return None
+
     client = create_client(url, key)
     st.session_state["_supabase_client"] = client
     return client
@@ -46,12 +259,16 @@ def supabase_client():
 
 def friendly_error(exc):
     message = str(exc)
+
     if "Invalid login credentials" in message:
         return "Email or password is incorrect."
+
     if "Email not confirmed" in message:
-        return "Please confirm your email using the link sent by Supabase, then log in."
+        return "Please confirm your email using the link sent by Supabase."
+
     if "row-level security" in message.lower() or "permission denied" in message.lower():
-        return "Permission was denied. Check that you ran the SQL setup and enabled the required policies."
+        return "Permission denied. Please check your Supabase database policies."
+
     return message[:400]
 
 
@@ -60,120 +277,270 @@ def get_user():
 
 
 def do_logout():
-    st.session_state.pop("user", None)
-    st.session_state.pop("page", None)
+    client = st.session_state.get("_supabase_client")
+
+    try:
+        if client:
+            client.auth.sign_out()
+    except Exception:
+        pass
+
+    for key in (
+        "user",
+        "page",
+        "confirm_delete_id",
+        "_supabase_client",
+        "main_navigation",
+    ):
+        st.session_state.pop(key, None)
+
     st.rerun()
 
+
+# ============================================================
+# IMAGE UPLOADS AND DATABASE FUNCTIONS
+# ============================================================
 
 def upload_image(client: Client, uploaded_file, user_id: str):
     if uploaded_file is None:
         return None
+
     image = Image.open(uploaded_file).convert("RGB")
     image.thumbnail((1400, 1400))
+
     buffer = BytesIO()
     image.save(buffer, format="JPEG", quality=85, optimize=True)
+
     path = f"{user_id}/{os.urandom(8).hex()}.jpg"
+
     client.storage.from_("findit-images").upload(
         path,
         buffer.getvalue(),
-        file_options={"content-type": "image/jpeg", "upsert": "false"},
+        file_options={
+            "content-type": "image/jpeg",
+            "upsert": "false",
+        },
     )
+
     return client.storage.from_("findit-images").get_public_url(path)
 
 
 def fetch_listings(client: Client):
-    result = client.table("listings").select("*").order("created_at", desc=True).execute()
+    result = (
+        client.table("listings")
+        .select("*")
+        .order("created_at", desc=True)
+        .execute()
+    )
     return result.data or []
 
 
 def fetch_claims(client: Client):
-    result = client.table("claims").select("*").order("created_at", desc=True).execute()
+    result = (
+        client.table("claims")
+        .select("*")
+        .order("created_at", desc=True)
+        .execute()
+    )
     return result.data or []
 
 
+# ============================================================
+# REUSABLE UI COMPONENTS
+# ============================================================
+
+def render_hero(eyebrow, title, description):
+    st.markdown(f"""
+    <div class="fi-hero">
+        <div class="fi-eyebrow">{eyebrow}</div>
+        <h1>{title}</h1>
+        <p>{description}</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+
 def render_listing_card(item, show_claim_button=False, client=None, user=None):
+    listing_type = item.get("listing_type", "found")
+    status = item.get("status", "open")
+
+    type_label = "LOST ITEM" if listing_type == "lost" else "FOUND ITEM"
+    type_class = "fi-lost" if listing_type == "lost" else "fi-found"
+    status_class = "fi-open" if status == "open" else "fi-resolved"
+
     with st.container(border=True):
-        left, right = st.columns([1, 2.2], gap="medium")
+        left, right = st.columns([1, 2.1], gap="large")
+
         with left:
             if item.get("image_url"):
                 st.image(item["image_url"], use_container_width=True)
             else:
-                st.markdown("### 📦\n_No photo uploaded_")
-        with right:
-            kind = "🔴 LOST" if item.get("listing_type") == "lost" else "🟢 FOUND"
-            st.markdown(f"**{kind}** · `{item.get('status', 'open').upper()}`")
-            st.subheader(item.get("title", "Untitled item"))
-            st.write(item.get("description", "No description provided."))
-            st.caption(
-                f"Category: {item.get('category', 'Other')}  ·  "
-                f"Colour: {item.get('color') or 'Not specified'}"
-            )
-            st.caption(
-                f"Location: {item.get('location', 'Not specified')}  ·  "
-                f"Date: {item.get('event_date') or 'Not specified'}"
-            )
-            st.caption(f"Listing ID: {item.get('id', '')}")
-            if show_claim_button and client and user and item.get("owner_id") != user["id"] and item.get("status") == "open":
-                with st.form(f"claim_{item['id']}"):
-                    message = st.text_area(
-                        "Claim message",
-                        placeholder="Describe a detail that helps verify this is your item. Avoid sharing sensitive information.",
-                        key=f"claim_message_{item['id']}",
-                    )
-                    submitted = st.form_submit_button("Request to connect")
-                    if submitted:
-                        try:
-                            client.table("claims").insert({
-                                "listing_id": item["id"],
-                                "claimant_id": user["id"],
-                                "message": message.strip() or "I'd like to discuss this item.",
-                            }).execute()
-                            st.success("Request sent to the listing owner.")
-                            st.rerun()
-                        except Exception as exc:
-                            st.error(friendly_error(exc))
+                st.markdown(
+                    '<div style="height:170px;display:flex;align-items:center;'
+                    'justify-content:center;background:#f8fafc;border:1px dashed #d7deea;'
+                    'border-radius:14px;font-size:2rem;">📦</div>',
+                    unsafe_allow_html=True,
+                )
 
+        with right:
+            st.markdown(
+                f'<span class="fi-chip {type_class}">{type_label}</span> '
+                f'<span class="fi-chip {status_class}">{status.upper()}</span>',
+                unsafe_allow_html=True,
+            )
+
+            st.markdown(f"### {item.get('title', 'Untitled item')}")
+            st.write(item.get("description") or "No description provided.")
+
+            meta1, meta2 = st.columns(2)
+
+            with meta1:
+                st.caption(f"**Category**  \n{item.get('category', 'Other')}")
+                st.caption(f"**Colour**  \n{item.get('color') or 'Not specified'}")
+
+            with meta2:
+                st.caption(f"**Location**  \n{item.get('location', 'Not specified')}")
+                st.caption(f"**Date**  \n{item.get('event_date') or 'Not specified'}")
+
+            if show_claim_button and client and user:
+                if item.get("owner_id") != user["id"] and status == "open":
+                    with st.form(f"claim_{item['id']}"):
+                        message = st.text_area(
+                            "Message to the owner",
+                            placeholder="Describe a detail that helps verify ownership. Keep private details to yourself.",
+                            key=f"claim_message_{item['id']}",
+                        )
+
+                        submitted = st.form_submit_button(
+                            "Request to connect",
+                            type="primary",
+                            use_container_width=True,
+                        )
+
+                        if submitted:
+                            try:
+                                client.table("claims").insert({
+                                    "listing_id": item["id"],
+                                    "claimant_id": user["id"],
+                                    "message": message.strip() or "I'd like to discuss this item.",
+                                }).execute()
+
+                                st.success("Request sent to the listing owner.")
+                                st.rerun()
+
+                            except Exception as exc:
+                                st.error(friendly_error(exc))
+
+
+# ============================================================
+# MAIN APPLICATION
+# ============================================================
 
 def main():
     client = supabase_client()
-    st.markdown("""
-    <div class="hero">
-      <h1>🔎 FindIt</h1>
-      <p>Lost something? Found something? Let’s help it find its way home.</p>
-    </div>
-    """, unsafe_allow_html=True)
 
+    # Configuration check
     if client is None:
-        st.error("FindIt is not configured yet. Add your Supabase URL and anon key to `.streamlit/secrets.toml`.")
-        st.code('[supabase]\nurl = "https://YOUR-PROJECT.supabase.co"\nanon_key = "YOUR-SUPABASE-ANON-KEY"', language="toml")
-        st.info("Follow README.md and run supabase_setup.sql in your Supabase project's SQL Editor.")
+        st.markdown(
+            '<div class="fi-brand"><span class="fi-logo">🔎</span> FindIt</div>',
+            unsafe_allow_html=True,
+        )
+
+        render_hero(
+            "COMMUNITY LOST & FOUND",
+            "A little help goes a long way.",
+            "Find missing belongings, report items you've found, and help return things to their owners.",
+        )
+
+        st.error(
+            "FindIt is not configured. Add your Supabase URL and anon key "
+            "to Streamlit Community Cloud secrets."
+        )
+
+        st.code(
+            '[supabase]\n'
+            'url = "https://YOUR-PROJECT.supabase.co"\n'
+            'anon_key = "YOUR-SUPABASE-ANON-KEY"',
+            language="toml",
+        )
+
         st.stop()
 
     user = get_user()
+
+    # --------------------------------------------------------
+    # LOGIN AND SIGNUP
+    # --------------------------------------------------------
+
     if not user:
-        login_tab, signup_tab = st.tabs(["Log in", "Create account"])
-        with login_tab:
+        st.markdown(
+            '<div class="fi-brand"><span class="fi-logo">🔎</span> FindIt</div>',
+            unsafe_allow_html=True,
+        )
+
+        render_hero(
+            "LOST SOMETHING? FOUND SOMETHING?",
+            "Let's help it find its way home.",
+            "A community space to report lost and found items, discover possible matches, and connect with the right person.",
+        )
+
+        login_col, signup_col = st.columns(2, gap="large")
+
+        with login_col:
+            st.markdown("## Welcome back")
+            st.markdown(
+                '<p class="fi-muted">Log in to manage your listings and requests.</p>',
+                unsafe_allow_html=True,
+            )
+
             with st.form("login_form"):
-                email = st.text_input("Email", key="login_email").strip().lower()
+                email = st.text_input("Email address", key="login_email").strip().lower()
                 password = st.text_input("Password", type="password", key="login_password")
-                submitted = st.form_submit_button("Log in", type="primary", use_container_width=True)
+
+                submitted = st.form_submit_button(
+                    "Log in",
+                    type="primary",
+                    use_container_width=True,
+                )
+
                 if submitted:
                     try:
-                        response = client.auth.sign_in_with_password({"email": email, "password": password})
+                        response = client.auth.sign_in_with_password({
+                            "email": email,
+                            "password": password,
+                        })
+
                         st.session_state.user = {
                             "id": response.user.id,
                             "email": response.user.email,
                         }
+
                         st.rerun()
+
                     except Exception as exc:
                         st.error(friendly_error(exc))
-        with signup_tab:
-            st.write("Create an account to post listings and contact other users.")
+
+        with signup_col:
+            st.markdown("## New to FindIt?")
+            st.markdown(
+                '<p class="fi-muted">Create an account to publish reports and contact listing owners.</p>',
+                unsafe_allow_html=True,
+            )
+
             with st.form("signup_form"):
                 new_email = st.text_input("Email address", key="signup_email").strip().lower()
-                new_password = st.text_input("Password (at least 8 characters)", type="password", key="signup_password")
+                new_password = st.text_input(
+                    "Password (at least 8 characters)",
+                    type="password",
+                    key="signup_password",
+                )
                 confirm_password = st.text_input("Confirm password", type="password")
-                submitted = st.form_submit_button("Create account", type="primary", use_container_width=True)
+
+                submitted = st.form_submit_button(
+                    "Create account",
+                    type="primary",
+                    use_container_width=True,
+                )
+
                 if submitted:
                     if not new_email or "@" not in new_email:
                         st.error("Enter a valid email address.")
@@ -183,7 +550,11 @@ def main():
                         st.error("The passwords do not match.")
                     else:
                         try:
-                            response = client.auth.sign_up({"email": new_email, "password": new_password})
+                            response = client.auth.sign_up({
+                                "email": new_email,
+                                "password": new_password,
+                            })
+
                             if response.session:
                                 st.session_state.user = {
                                     "id": response.user.id,
@@ -192,162 +563,465 @@ def main():
                                 st.success("Account created.")
                                 st.rerun()
                             else:
-                                st.success("Account created. Check your email for the confirmation link, then log in.")
+                                st.success(
+                                    "Account created. Check your email for the confirmation link, then log in."
+                                )
+
                         except Exception as exc:
-                            st.error(f"Error type: {type(exc).__name__}")
-                            st.code(str(exc))
-        st.caption("For safety, use a unique password. FindIt never asks for your email password anywhere except Supabase authentication.")
+                            st.error(friendly_error(exc))
+
+        st.caption(
+            "Use a unique password. FindIt uses Supabase authentication to protect your account."
+        )
         st.stop()
 
+    # --------------------------------------------------------
+    # SIDEBAR NAVIGATION
+    # --------------------------------------------------------
+
     with st.sidebar:
-        st.markdown("## FindIt")
-        st.caption(user.get("email", "Signed in"))
+        st.markdown(
+            '<div class="fi-brand"><span class="fi-logo">🔎</span> FindIt</div>',
+            unsafe_allow_html=True,
+        )
+
+        st.markdown(
+            '<p class="fi-muted">Community lost & found</p>',
+            unsafe_allow_html=True,
+        )
+
+        st.divider()
+
         page = st.radio(
             "Navigation",
-            ["Home & Search", "Report an item", "My dashboard", "Claims inbox"],
+            [
+                "Home & Search",
+                "Report an item",
+                "My dashboard",
+                "Claims inbox",
+            ],
+            format_func=lambda x: {
+                "Home & Search": "⌕   Explore items",
+                "Report an item": "＋   Report an item",
+                "My dashboard": "▦   My dashboard",
+                "Claims inbox": "✉   Claims inbox",
+            }.get(x, x),
             label_visibility="collapsed",
+            key="main_navigation",
         )
+
         st.divider()
-        st.caption("Never post full addresses, ID numbers, or private details in public descriptions.")
+
+        st.markdown("**Signed in as**")
+        st.caption(user.get("email", "Signed in"))
+
+        st.caption(
+            "Never post full addresses, ID numbers, or private details in public descriptions."
+        )
+
         if st.button("Log out", use_container_width=True):
             do_logout()
 
+    # Load listings
     try:
         listings = fetch_listings(client)
     except Exception as exc:
         st.error("Couldn't load listings. " + friendly_error(exc))
         st.stop()
 
+    open_listings = [x for x in listings if x.get("status") == "open"]
+    my_listings = [x for x in listings if x.get("owner_id") == user["id"]]
+
+    # ========================================================
+    # HOME AND SEARCH
+    # ========================================================
+
     if page == "Home & Search":
-        st.title("Find an item")
-        st.write("Search public listings and filter down to likely matches.")
-        qcol, typecol, catcol = st.columns([2, 1, 1])
-        with qcol:
-            query = st.text_input("Search keywords", placeholder="e.g. black wallet, blue bottle, library")
-        with typecol:
-            type_filter = st.selectbox("Listing type", ["All", "Lost", "Found"])
-        with catcol:
-            categories = ["All"] + sorted(set(x.get("category", "Other") for x in listings))
-            category_filter = st.selectbox("Category", categories)
-        location_filter = st.text_input("Location contains", placeholder="e.g. campus, library, bus stop")
-        open_only = st.checkbox("Show only unresolved listings", value=True)
+        render_hero(
+            "FIND IT. RETURN IT.",
+            "Lost something? Start here.",
+            "Search community reports, discover possible matches, or share an item you've found. Every small detail can help.",
+        )
+
+        stat1, stat2, stat3 = st.columns(3)
+
+        with stat1:
+            st.markdown(
+                f'<div class="fi-stat"><div class="fi-stat-label">Open listings</div>'
+                f'<div class="fi-stat-value">{len(open_listings)}</div></div>',
+                unsafe_allow_html=True,
+            )
+
+        with stat2:
+            st.markdown(
+                f'<div class="fi-stat"><div class="fi-stat-label">Your reports</div>'
+                f'<div class="fi-stat-value">{len(my_listings)}</div></div>',
+                unsafe_allow_html=True,
+            )
+
+        with stat3:
+            st.markdown(
+                f'<div class="fi-stat"><div class="fi-stat-label">Community listings</div>'
+                f'<div class="fi-stat-value">{len(listings)}</div></div>',
+                unsafe_allow_html=True,
+            )
+
+        st.write("")
+
+        st.markdown(
+            '<div class="fi-section-title">Explore listings</div>',
+            unsafe_allow_html=True,
+        )
+        st.markdown(
+            '<p class="fi-section-subtitle">Search and filter reports to find what you are looking for.</p>',
+            unsafe_allow_html=True,
+        )
+
+        with st.container(border=True):
+            qcol, typecol = st.columns([2.2, 1])
+
+            with qcol:
+                query = st.text_input(
+                    "Search keywords",
+                    placeholder="Try black wallet, blue bottle, library...",
+                )
+
+            with typecol:
+                type_filter = st.selectbox(
+                    "Report type",
+                    ["All types", "Lost", "Found"],
+                )
+
+            f1, f2, f3 = st.columns([1.1, 1.4, 1])
+
+            with f1:
+                categories = ["All categories"] + sorted(
+                    set(x.get("category", "Other") for x in listings)
+                )
+                category_filter = st.selectbox("Category", categories)
+
+            with f2:
+                location_filter = st.text_input(
+                    "Location",
+                    placeholder="Campus, library, bus stop...",
+                )
+
+            with f3:
+                open_only = st.checkbox("Open listings only", value=True)
 
         filtered = []
         q = query.lower().strip()
         loc = location_filter.lower().strip()
+
         for item in listings:
-            searchable = " ".join(str(item.get(k) or "") for k in ["title", "description", "category", "color", "location"]).lower()
+            searchable = " ".join(
+                str(item.get(k) or "")
+                for k in [
+                    "title",
+                    "description",
+                    "category",
+                    "color",
+                    "location",
+                ]
+            ).lower()
+
             if q and q not in searchable:
                 continue
-            if type_filter != "All" and item.get("listing_type") != type_filter.lower():
+
+            if type_filter != "All types" and item.get("listing_type") != type_filter.lower():
                 continue
-            if category_filter != "All" and item.get("category") != category_filter:
+
+            if category_filter != "All categories" and item.get("category") != category_filter:
                 continue
+
             if loc and loc not in str(item.get("location", "")).lower():
                 continue
+
             if open_only and item.get("status") != "open":
                 continue
+
             filtered.append(item)
 
-        st.caption(f"{len(filtered)} listing(s) found")
-        if not filtered:
-            st.info("No matching listings yet. Try a broader search or report the item.")
-        for item in filtered:
-            render_listing_card(item, show_claim_button=True, client=client, user=user)
+        result_col, action_col = st.columns([3, 1])
 
+        with result_col:
+            st.markdown(f"**{len(filtered)} result(s) found**")
+
+        with action_col:
+            if st.button("＋ Report an item", use_container_width=True):
+                st.session_state["main_navigation"] = "Report an item"
+                st.rerun()
+
+        if not filtered:
+            st.info(
+                "No matching listings yet. Try a broader search or report the item."
+            )
+
+        for item in filtered:
+            render_listing_card(
+                item,
+                show_claim_button=True,
+                client=client,
+                user=user,
+            )
+
+        # Potential matches
         st.divider()
-        st.subheader("Potential matches")
-        st.caption("FindIt compares the keywords, category, colour and location of open lost/found reports. These are suggestions, not proof of ownership.")
-        open_lost = [x for x in listings if x.get("listing_type") == "lost" and x.get("status") == "open" and x.get("owner_id") != user["id"]]
-        open_found = [x for x in listings if x.get("listing_type") == "found" and x.get("status") == "open" and x.get("owner_id") != user["id"]]
+
+        st.markdown(
+            '<div class="fi-section-title">Possible matches</div>',
+            unsafe_allow_html=True,
+        )
+        st.markdown(
+            '<p class="fi-section-subtitle">Suggested lost and found pairs based on item details. '
+            'These suggestions are not proof of ownership.</p>',
+            unsafe_allow_html=True,
+        )
+
+        open_lost = [
+            x for x in listings
+            if x.get("listing_type") == "lost"
+            and x.get("status") == "open"
+            and x.get("owner_id") != user["id"]
+        ]
+
+        open_found = [
+            x for x in listings
+            if x.get("listing_type") == "found"
+            and x.get("status") == "open"
+            and x.get("owner_id") != user["id"]
+        ]
+
         matches = []
+        ignored = {
+            "the", "a", "an", "and", "or", "with", "my",
+            "is", "it", "of", "to", "in",
+        }
+
         for lost in open_lost:
             for found in open_found:
                 score = 0
+
                 if lost.get("category") and lost.get("category") == found.get("category"):
                     score += 3
-                if lost.get("color") and found.get("color") and lost["color"].lower() == found["color"].lower():
+
+                if (
+                    lost.get("color")
+                    and found.get("color")
+                    and lost["color"].lower() == found["color"].lower()
+                ):
                     score += 2
-                lost_words = set((lost.get("title", "") + " " + lost.get("description", "")).lower().split())
-                found_words = set((found.get("title", "") + " " + found.get("description", "")).lower().split())
-                common = lost_words & found_words
-                ignored = {"the", "a", "an", "and", "or", "with", "my", "is", "it", "of", "to", "in"}
-                score += min(4, len(common - ignored))
-                if lost.get("location") and found.get("location") and lost["location"].lower() == found["location"].lower():
+
+                lost_words = set(
+                    (lost.get("title", "") + " " + lost.get("description", "")).lower().split()
+                )
+
+                found_words = set(
+                    (found.get("title", "") + " " + found.get("description", "")).lower().split()
+                )
+
+                score += min(4, len((lost_words & found_words) - ignored))
+
+                if (
+                    lost.get("location")
+                    and found.get("location")
+                    and lost["location"].lower() == found["location"].lower()
+                ):
                     score += 1
+
                 if score >= 3:
                     matches.append((score, lost, found))
+
         matches.sort(key=lambda x: x[0], reverse=True)
+
         if not matches:
-            st.write("No strong matches found yet.")
+            st.info("No strong matches found yet. New reports may reveal a match.")
+
         for score, lost, found in matches[:5]:
-            with st.expander(f"Possible match (score {score}) · {lost['title']} ↔ {found['title']}"):
-                a, b = st.columns(2)
-                with a:
+            with st.expander(
+                f"Possible match · {lost['title']} ↔ {found['title']} · Score {score}"
+            ):
+                left, right = st.columns(2)
+
+                with left:
                     st.markdown("**Lost report**")
                     render_listing_card(lost)
-                with b:
+
+                with right:
                     st.markdown("**Found report**")
                     render_listing_card(found)
 
-    elif page == "Report an item":
-        st.title("Report an item")
-        st.write("Share enough detail to identify the item, but keep one or two identifying details private so the owner can verify a claim.")
-        with st.form("report_form", clear_on_submit=True):
-            listing_type = st.radio("What are you reporting?", ["Lost item", "Found item"], horizontal=True)
-            title = st.text_input("Item name", placeholder="e.g. Black wireless earbuds case")
-            category = st.selectbox("Category", ["Electronics", "Wallet / Cards", "Keys", "Bag", "Clothing", "Books / Stationery", "Jewellery", "Bottle / Container", "Other"])
-            color = st.text_input("Colour / visible characteristics", placeholder="e.g. matte black with a small blue sticker")
-            description = st.text_area("Description", placeholder="Brand, size, distinctive marks, etc. Don't include sensitive numbers.")
-            location = st.text_input("Where was it lost/found?", placeholder="e.g. Block B library, near the main gate")
-            event_date = st.date_input("Date lost/found", value=date.today(), max_value=date.today())
-            uploaded = st.file_uploader("Item photo (JPG, JPEG or PNG)", type=["jpg", "jpeg", "png"])
-            submitted = st.form_submit_button("Publish listing", type="primary", use_container_width=True)
-            if submitted:
-                if len(title.strip()) < 2:
-                    st.error("Enter an item name.")
-                elif len(description.strip()) < 8:
-                    st.error("Add a slightly more detailed description (at least 8 characters).")
-                elif len(location.strip()) < 2:
-                    st.error("Enter the place where it was lost or found.")
-                else:
-                    try:
-                        image_url = upload_image(client, uploaded, user["id"]) if uploaded else None
-                        payload = {
-                            "owner_id": user["id"],
-                            "listing_type": "lost" if listing_type == "Lost item" else "found",
-                            "title": title.strip()[:100],
-                            "category": category,
-                            "color": color.strip()[:120],
-                            "description": description.strip()[:1500],
-                            "location": location.strip()[:200],
-                            "event_date": event_date.isoformat(),
-                            "image_url": image_url,
-                            "status": "open",
-                        }
-                        client.table("listings").insert(payload).execute()
-                        st.success("Your listing has been published!")
-                        st.rerun()
-                    except Exception as exc:
-                        st.error("Could not publish the listing. " + friendly_error(exc))
+    # ========================================================
+    # REPORT AN ITEM
+    # ========================================================
 
-    
+    elif page == "Report an item":
+        render_hero(
+            "ADD TO THE COMMUNITY",
+            "Report an item",
+            "Share useful details to help someone recognise the item. Keep one or two identifying details private for verification.",
+        )
+
+        with st.container(border=True):
+            with st.form("report_form", clear_on_submit=True):
+                type_col, date_col = st.columns(2)
+
+                with type_col:
+                    listing_type = st.radio(
+                        "What are you reporting?",
+                        ["Lost item", "Found item"],
+                        horizontal=True,
+                    )
+
+                with date_col:
+                    event_date = st.date_input(
+                        "Date lost or found",
+                        value=date.today(),
+                        max_value=date.today(),
+                    )
+
+                title = st.text_input(
+                    "Item name",
+                    placeholder="e.g. Black wireless earbuds case",
+                )
+
+                category = st.selectbox(
+                    "Category",
+                    [
+                        "Electronics",
+                        "Wallet / Cards",
+                        "Keys",
+                        "Bag",
+                        "Clothing",
+                        "Books / Stationery",
+                        "Jewellery",
+                        "Bottle / Container",
+                        "Other",
+                    ],
+                )
+
+                color = st.text_input(
+                    "Colour or visible characteristics",
+                    placeholder="e.g. matte black with a small blue sticker",
+                )
+
+                description = st.text_area(
+                    "Description",
+                    placeholder="Brand, size, distinctive marks, etc. Avoid sensitive numbers.",
+                    height=120,
+                )
+
+                location = st.text_input(
+                    "Where was it lost or found?",
+                    placeholder="e.g. Block B library, near the main gate",
+                )
+
+                uploaded = st.file_uploader(
+                    "Item photo (JPG, JPEG or PNG)",
+                    type=["jpg", "jpeg", "png"],
+                    help="A clear photo can make an item easier to recognise.",
+                )
+
+                submitted = st.form_submit_button(
+                    "Publish listing",
+                    type="primary",
+                    use_container_width=True,
+                )
+
+                if submitted:
+                    if len(title.strip()) < 2:
+                        st.error("Enter an item name.")
+
+                    elif len(description.strip()) < 8:
+                        st.error("Add a slightly more detailed description (at least 8 characters).")
+
+                    elif len(location.strip()) < 2:
+                        st.error("Enter the place where it was lost or found.")
+
+                    else:
+                        try:
+                            image_url = (
+                                upload_image(client, uploaded, user["id"])
+                                if uploaded else None
+                            )
+
+                            payload = {
+                                "owner_id": user["id"],
+                                "listing_type": (
+                                    "lost" if listing_type == "Lost item" else "found"
+                                ),
+                                "title": title.strip()[:100],
+                                "category": category,
+                                "color": color.strip()[:120],
+                                "description": description.strip()[:1500],
+                                "location": location.strip()[:200],
+                                "event_date": event_date.isoformat(),
+                                "image_url": image_url,
+                                "status": "open",
+                            }
+
+                            client.table("listings").insert(payload).execute()
+
+                            st.success("Your listing has been published!")
+                            st.rerun()
+
+                        except Exception as exc:
+                            st.error(
+                                "Could not publish the listing. "
+                                + friendly_error(exc)
+                            )
+
+    # ========================================================
+    # MY DASHBOARD — UNLIST / RELIST / DELETE
+    # ========================================================
+
     elif page == "My dashboard":
-        st.title("My dashboard")
-        mine = [x for x in listings if x.get("owner_id") == user["id"]]
-        st.write(f"You have **{len(mine)}** listing(s).")
+        render_hero(
+            "YOUR SPACE",
+            "My dashboard",
+            "Manage your reports, update their status, or remove listings you no longer need.",
+        )
+
+        mine = [
+            x for x in listings
+            if x.get("owner_id") == user["id"]
+        ]
+
+        open_mine = [
+            x for x in mine if x.get("status") == "open"
+        ]
+
+        resolved_mine = [
+            x for x in mine if x.get("status") != "open"
+        ]
+
+        s1, s2, s3 = st.columns(3)
+
+        with s1:
+            st.metric("All reports", len(mine))
+
+        with s2:
+            st.metric("Open", len(open_mine))
+
+        with s3:
+            st.metric("Resolved", len(resolved_mine))
+
+        st.write("")
 
         if not mine:
-            st.info("You haven't published a listing yet.")
+            st.info(
+                "You haven't published a listing yet. "
+                "Use Report an item to create your first report."
+            )
 
         for item in mine:
+            item_id = item["id"]
+            item_status = item.get("status", "open")
+
             with st.container(border=True):
                 render_listing_card(item)
 
-                item_id = item["id"]
-                item_status = item.get("status", "open")
-
-                st.caption(f"Current status: {item_status.upper()}")
+                st.caption(f"Manage listing · Current status: {item_status.upper()}")
 
                 col1, col2 = st.columns(2)
 
@@ -364,15 +1038,19 @@ def main():
                                     .update({"status": "resolved"})
                                     .eq("id", item_id)
                                     .eq("owner_id", user["id"])
+                                    .select("id")
                                     .execute()
                                 )
+
                                 if result.data:
                                     st.success("Item unlisted successfully.")
                                     st.rerun()
                                 else:
-                                    st.error("The listing wasn't updated.")
+                                    st.warning("The listing was not updated. Refresh and try again.")
+
                             except Exception as exc:
                                 st.error(friendly_error(exc))
+
                     else:
                         if st.button(
                             "Relist item",
@@ -385,13 +1063,16 @@ def main():
                                     .update({"status": "open"})
                                     .eq("id", item_id)
                                     .eq("owner_id", user["id"])
+                                    .select("id")
                                     .execute()
                                 )
+
                                 if result.data:
                                     st.success("Item relisted successfully.")
                                     st.rerun()
                                 else:
-                                    st.error("The listing wasn't updated.")
+                                    st.warning("The listing was not updated. Refresh and try again.")
+
                             except Exception as exc:
                                 st.error(friendly_error(exc))
 
@@ -405,10 +1086,12 @@ def main():
                         st.session_state["confirm_delete_id"] = item_id
                         st.rerun()
 
+                # Delete confirmation
                 if st.session_state.get("confirm_delete_id") == item_id:
                     st.warning(
-                        "Are you sure? This permanently deletes the listing "
-                        "and its associated claim records. This cannot be undone."
+                        "Are you sure? This permanently deletes the listing. "
+                        "Associated claims may also be deleted. This cannot be undone. "
+                        "The uploaded photo may remain in Supabase Storage."
                     )
 
                     confirm_col, cancel_col = st.columns(2)
@@ -426,21 +1109,20 @@ def main():
                                     .delete()
                                     .eq("id", item_id)
                                     .eq("owner_id", user["id"])
+                                    .select("id")
                                     .execute()
                                 )
 
                                 if result.data:
-                                    st.session_state.pop(
-                                        "confirm_delete_id", None
-                                    )
+                                    st.session_state.pop("confirm_delete_id", None)
                                     st.success("Listing deleted successfully.")
                                     st.rerun()
                                 else:
                                     st.error(
-                                        "No listing was deleted. It may "
-                                        "already be deleted, or you may "
-                                        "not have permission."
+                                        "No listing was deleted. It may already be deleted, "
+                                        "or you may not have permission."
                                     )
+
                             except Exception as exc:
                                 st.error(friendly_error(exc))
 
@@ -453,50 +1135,141 @@ def main():
                             st.session_state.pop("confirm_delete_id", None)
                             st.rerun()
 
+    # ========================================================
+    # CLAIMS INBOX
+    # ========================================================
+
     elif page == "Claims inbox":
-        st.title("Claims & connection requests")
-        st.write("Requests on your listings appear in the inbox. Requests you made appear below.")
+        render_hero(
+            "CONNECTIONS",
+            "Claims inbox",
+            "Review requests on your listings and keep track of the items you have asked about.",
+        )
+
         try:
             claims = fetch_claims(client)
+
         except Exception as exc:
             st.error(friendly_error(exc))
             st.stop()
 
-        owned_ids = {x["id"] for x in listings if x.get("owner_id") == user["id"]}
-        received = [c for c in claims if c.get("listing_id") in owned_ids]
-        sent = [c for c in claims if c.get("claimant_id") == user["id"]]
+        owned_ids = {
+            x["id"]
+            for x in listings
+            if x.get("owner_id") == user["id"]
+        }
 
-        st.subheader("Requests on my listings")
-        if not received:
-            st.info("No requests received yet.")
-        for claim in received:
-            listing = next((x for x in listings if x["id"] == claim.get("listing_id")), None)
-            with st.container(border=True):
-                st.markdown(f"**{listing.get('title', 'Listing') if listing else 'Listing'}** · {claim.get('status', 'pending').upper()}")
-                st.write(claim.get("message", "No message"))
-                st.caption(f"Request ID: {claim.get('id')}")
-                if claim.get("status") == "pending":
-                    new_claim_status = st.selectbox("Decision", ["pending", "accepted", "rejected"], key=f"decision_{claim['id']}")
-                    if st.button("Update request", key=f"update_claim_{claim['id']}"):
-                        try:
-                            client.table("claims").update({"status": new_claim_status}).eq("id", claim["id"]).execute()
-                            st.success("Request updated.")
-                            st.rerun()
-                        except Exception as exc:
-                            st.error(friendly_error(exc))
-                if claim.get("status") == "accepted":
-                    st.info("This request was accepted. Coordinate privately and verify ownership before handing over the item.")
+        received = [
+            c for c in claims
+            if c.get("listing_id") in owned_ids
+        ]
 
-        st.subheader("Requests I sent")
-        if not sent:
-            st.info("You haven't requested to connect about any listings.")
-        for claim in sent:
-            listing = next((x for x in listings if x["id"] == claim.get("listing_id")), None)
-            st.write(f"**{listing.get('title', 'Listing') if listing else 'Listing'}** — {claim.get('status', 'pending').upper()}")
-            st.caption(claim.get("message", ""))
+        sent = [
+            c for c in claims
+            if c.get("claimant_id") == user["id"]
+        ]
+
+        tab_received, tab_sent = st.tabs([
+            f"Requests received ({len(received)})",
+            f"Requests sent ({len(sent)})",
+        ])
+
+        with tab_received:
+            if not received:
+                st.info("No requests received yet.")
+
+            for claim in received:
+                listing = next(
+                    (
+                        x for x in listings
+                        if x["id"] == claim.get("listing_id")
+                    ),
+                    None,
+                )
+
+                claim_status = claim.get("status", "pending")
+
+                with st.container(border=True):
+                    title = (
+                        listing.get("title", "Listing")
+                        if listing else "Listing"
+                    )
+
+                    st.markdown(f"### {title}")
+
+                    st.markdown(
+                        f"**Status:** `{claim_status.upper()}`"
+                    )
+
+                    st.write(claim.get("message", "No message"))
+                    st.caption(f"Request ID: {claim.get('id')}")
+
+                    if claim_status == "pending":
+                        new_claim_status = st.selectbox(
+                            "Decision",
+                            ["pending", "accepted", "rejected"],
+                            key=f"decision_{claim['id']}",
+                        )
+
+                        if st.button(
+                            "Update request",
+                            key=f"update_claim_{claim['id']}",
+                            type="primary",
+                        ):
+                            try:
+                                client.table("claims").update(
+                                    {"status": new_claim_status}
+                                ).eq(
+                                    "id", claim["id"]
+                                ).execute()
+
+                                st.success("Request updated.")
+                                st.rerun()
+
+                            except Exception as exc:
+                                st.error(friendly_error(exc))
+
+                    if claim_status == "accepted":
+                        st.info(
+                            "Request accepted. Coordinate privately and verify ownership before handing over the item."
+                        )
+
+        with tab_sent:
+            if not sent:
+                st.info("You haven't requested to connect about any listings yet.")
+
+            for claim in sent:
+                listing = next(
+                    (
+                        x for x in listings
+                        if x["id"] == claim.get("listing_id")
+                    ),
+                    None,
+                )
+
+                with st.container(border=True):
+                    title = (
+                        listing.get("title", "Listing")
+                        if listing else "Listing"
+                    )
+
+                    st.markdown(f"### {title}")
+                    st.markdown(
+                        f"**Status:** `{claim.get('status', 'pending').upper()}`"
+                    )
+                    st.write(claim.get("message", ""))
+
+    # --------------------------------------------------------
+    # FOOTER
+    # --------------------------------------------------------
 
     st.divider()
-    st.caption("FindIt is a community lost-and-found tool. Listings and suggested matches are user-submitted and should be verified before returning an item.")
+
+    st.caption(
+        "FindIt is a community lost-and-found tool. "
+        "Listings and suggested matches are user-submitted. "
+        "Verify ownership before returning an item."
+    )
 
 
 if __name__ == "__main__":
