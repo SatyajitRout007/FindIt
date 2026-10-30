@@ -133,16 +133,16 @@ grant select, insert on public.messages to authenticated;
 
 -- Enable database change broadcasts for the live chat.
 -- Safe to run more than once; does not change existing tables or data.
-do $
-begin
-    if not exists (
-        select 1
-        from pg_publication_tables
-        where pubname = 'supabase_realtime'
-          and schemaname = 'public'
-          and tablename = 'messages'
-    ) then
-        alter publication supabase_realtime add table public.messages;
-    end if;
-end
-$;
+DO $findit_realtime$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_publication_tables
+        WHERE pubname = 'supabase_realtime'
+          AND schemaname = 'public'
+          AND tablename = 'messages'
+    ) THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE public.messages;
+    END IF;
+END;
+$findit_realtime$;
