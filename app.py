@@ -389,6 +389,33 @@ div[data-testid="stTextArea"] textarea:focus {
     margin-left: 0 !important;
     padding-left: 0 !important;
 }
+/* Sidebar navigation uses real buttons, never radio widgets. */
+[data-testid="stSidebar"] [data-testid="stButton"] {
+    margin: 0 0 5px 0;
+}
+[data-testid="stSidebar"] [data-testid="stButton"] button {
+    justify-content: flex-start;
+    text-align: left;
+    min-height: 42px;
+    border-radius: 11px;
+    padding: 8px 13px;
+    font-weight: 500;
+    box-shadow: none;
+}
+[data-testid="stSidebar"] [data-testid="stButton"] button[kind="secondary"] {
+    background: transparent;
+    border-color: transparent;
+    color: #354256;
+}
+[data-testid="stSidebar"] [data-testid="stButton"] button[kind="secondary"]:hover {
+    background: #eef3f9;
+    border-color: #e5ebf2;
+}
+[data-testid="stSidebar"] [data-testid="stButton"] button[kind="primary"] {
+    background: #eaf1ff;
+    border-color: #d7e4ff;
+    color: #174ea6;
+}
 [data-testid="stSidebar"] [role="radiogroup"] label {
     background: transparent !important;
     border: 1px solid transparent;
@@ -2100,45 +2127,27 @@ def main():
             "Admin panel": "⚙   Admin panel",
         }
 
-        def sync_navigation(group_key):
-            selected = st.session_state.get(group_key)
-            if selected:
-                st.session_state["main_navigation"] = selected
-                for key, options in (
-                    ("nav_discover", nav_groups["DISCOVER"]),
-                    ("nav_activity", nav_groups["YOUR ACTIVITY"]),
-                    ("nav_account", nav_groups["ACCOUNT"]),
-                ):
-                    if key != group_key:
-                        st.session_state[key] = st.session_state["main_navigation"] if st.session_state["main_navigation"] in options else options[0]
-
         current_page = st.session_state.get("main_navigation", "Home & Search")
         if current_page not in sum(nav_groups.values(), []):
             current_page = "Home & Search"
             st.session_state["main_navigation"] = current_page
 
-        for group_title, group_key in (
-            ("DISCOVER", "nav_discover"),
-            ("YOUR ACTIVITY", "nav_activity"),
-            ("ACCOUNT", "nav_account"),
-        ):
+        for group_title in ("DISCOVER", "YOUR ACTIVITY", "ACCOUNT"):
             options = nav_groups[group_title]
-            if group_key not in st.session_state:
-                st.session_state[group_key] = current_page if current_page in options else options[0]
             st.markdown(
                 f'<p style="font-size:10px;font-weight:700;letter-spacing:1.25px;'
                 f'color:#8793a3;margin:16px 0 7px 9px;">{group_title}</p>',
                 unsafe_allow_html=True,
             )
-            st.radio(
-                group_title,
-                options,
-                format_func=lambda x: nav_labels.get(x, x),
-                label_visibility="collapsed",
-                key=group_key,
-                on_change=sync_navigation,
-                args=(group_key,),
-            )
+            for option in options:
+                if st.button(
+                    nav_labels.get(option, option),
+                    key="nav_button_" + re.sub(r"[^a-z0-9]+", "_", option.lower()).strip("_"),
+                    type="primary" if current_page == option else "secondary",
+                    use_container_width=True,
+                ):
+                    st.session_state["main_navigation"] = option
+                    st.rerun()
 
         page = st.session_state.get("main_navigation", current_page)
 
