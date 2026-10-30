@@ -2031,10 +2031,16 @@ def main():
 
         st.divider()
 
+        notification_count = get_unread_notification_count(client, user["id"])
         page = st.radio(
             "Navigation",
             [
                 "Home & Search",
+                "Smart matches",
+                "Saved items",
+                "Notifications",
+                "Map discovery",
+                "My profile",
                 "Report an item",
                 "My dashboard",
                 "Claims inbox",
@@ -2042,6 +2048,11 @@ def main():
             ] + (["Admin panel"] if admin_mode else []),
             format_func=lambda x: {
                 "Home & Search": "⌕   Explore items",
+                "Smart matches": "✨   Smart matches",
+                "Saved items": "☆   Saved items",
+                "Notifications": f"🔔   Notifications ({notification_count})" if notification_count else "🔔   Notifications",
+                "Map discovery": "📍   Map discovery",
+                "My profile": "👤   My profile",
                 "Report an item": "＋   Report an item",
                 "My dashboard": "▦   My dashboard",
                 "Claims inbox": "✉   Claims inbox",
@@ -2099,12 +2110,31 @@ def main():
             if st.button("Log out", use_container_width=True):
                 do_logout()
 
-    # Load listings
+    # Load listings and the user's personal filters.
     try:
         listings = fetch_listings(client)
     except Exception as exc:
         st.error("Couldn't load listings. " + friendly_error(exc))
         st.stop()
+
+    blocked_user_ids = get_blocked_user_ids(client, user["id"])
+    listings = [
+        item for item in listings
+        if item.get("owner_id") == user["id"] or item.get("owner_id") not in blocked_user_ids
+    ]
+    saved_listing_ids = get_saved_listing_ids(client, user["id"])
+    app_base_url = get_app_base_url()
+
+    try:
+        shared_listing_id = st.query_params.get("listing")
+    except Exception:
+        shared_listing_id = None
+    shared_listing = next(
+        (item for item in listings if str(item.get("id")) == str(shared_listing_id)),
+        None,
+    ) if shared_listing_id else None
+    if shared_listing:
+        page = "Home & Search"
 
     open_listings = [
         x for x in listings
@@ -2126,6 +2156,17 @@ def main():
             "Lost something? Start here.",
             "Search community reports, discover possible matches, or share an item you've found. Every small detail can help.",
         )
+
+        if shared_listing:
+            st.markdown("### Shared listing")
+            render_listing_card(
+                shared_listing,
+                show_claim_button=True,
+                client=client,
+                user=user,
+                saved_ids=saved_listing_ids,
+                base_url=app_base_url,
+            )
 
         stat1, stat2, stat3 = st.columns(3)
 
@@ -2265,6 +2306,8 @@ def main():
                 show_claim_button=True,
                 client=client,
                 user=user,
+                saved_ids=saved_listing_ids,
+                base_url=app_base_url,
             )
 
         # ----------------------------------------------------
@@ -2373,6 +2416,80 @@ def main():
                 with right:
                     st.markdown("**Found report**")
                     render_listing_card(found)
+
+    # ========================================================
+    # ADDITIONAL COMMUNITY FEATURES
+    # ========================================================
+
+    elif page == "Smart matches":
+        render_hero(
+            "SMART DISCOVERY",
+            "Matches for your reports",
+            "Find open reports that may describe the same item. Always verify ownership privately before a handover.",
+        )
+        render_smart_matches_page(
+            user,
+            listings,
+            lambda item: start_listing_conversation(client, item, user),
+        )
+
+    elif page == "Saved items":
+        render_hero(
+            "YOUR SHORTLIST",
+            "Saved items",
+            "Keep interesting listings together so you can return to them easily.",
+        )
+        render_saved_items_page(
+            client,
+            user,
+            listings,
+            lambda item: render_listing_card(
+                item,
+                show_claim_button=True,
+                client=client,
+                user=user,
+                saved_ids=saved_listing_ids,
+                base_url=app_base_url,
+                show_actions=True,
+            ),
+        )
+
+    elif page == "Notifications":
+        render_hero(
+            "STAY IN THE LOOP",
+            "Notifications",
+            "Messages, claim updates, saved-search matches and changes to saved listings.",
+        )
+        try:
+            render_notifications_page(client, user)
+        except Exception as exc:
+            st.error(
+                "Notifications need the new FindIt feature migration. "
+                "Run supabase_features_setup.sql in Supabase SQL Editor, then retry. "
+                + friendly_error(exc)
+            )
+
+    elif page == "Map discovery":
+        render_hero(
+            "EXPLORE BY AREA",
+            "Map discovery",
+            "Browse listings with approximate map locations. Exact private addresses are not shown.",
+        )
+        render_map_page(listings)
+
+    elif page == "My profile":
+        render_hero(
+            "YOUR COMMUNITY PRESENCE",
+            "My profile",
+            "See your contribution history, community badges and blocked accounts.",
+        )
+        try:
+            render_profile_page(client, user, listings)
+        except Exception as exc:
+            st.error(
+                "Profile features need the new FindIt feature migration. "
+                + friendly_error(exc)
+            )
 
     # ========================================================
     # REPORT AN ITEM
