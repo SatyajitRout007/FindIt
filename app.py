@@ -1773,7 +1773,7 @@ def main():
 
                     except Exception as exc:
                         st.error(friendly_error(exc))
-                st.markdown(
+            st.markdown(
                 '<p class="fi-muted" style="text-align:center;margin-top:1rem;">New to FindIt?</p>',
                 unsafe_allow_html=True,
             )
@@ -1859,7 +1859,7 @@ def main():
 
                         except Exception as exc:
                             st.error(friendly_error(exc))
-                st.markdown(
+            st.markdown(
                 '<p class="fi-muted" style="text-align:center;margin-top:1rem;">Already have an account?</p>',
                 unsafe_allow_html=True,
             )
