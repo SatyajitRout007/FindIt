@@ -842,6 +842,138 @@ body:has(#fi-dark-theme-marker) [data-testid="stImage"] img {
 }
 
 
+/* ============================================================
+   DARK MODE WIDGET AUDIT — consistent contrast across controls
+   ============================================================ */
+
+/* Text, password, number, date and time input surfaces */
+body:has(#fi-dark-theme-marker) [data-testid="stTextInput"] [data-baseweb="input"],
+body:has(#fi-dark-theme-marker) [data-testid="stTextInput"] [data-baseweb="base-input"],
+body:has(#fi-dark-theme-marker) [data-testid="stTextArea"] [data-baseweb="textarea"],
+body:has(#fi-dark-theme-marker) [data-testid="stNumberInput"] [data-baseweb="input"],
+body:has(#fi-dark-theme-marker) [data-testid="stDateInput"] [data-baseweb="input"],
+body:has(#fi-dark-theme-marker) [data-testid="stTimeInput"] [data-baseweb="input"],
+body:has(#fi-dark-theme-marker) [data-testid="stTextInput"] > div,
+body:has(#fi-dark-theme-marker) [data-testid="stNumberInput"] > div,
+body:has(#fi-dark-theme-marker) [data-testid="stDateInput"] > div,
+body:has(#fi-dark-theme-marker) [data-testid="stTimeInput"] > div {
+    background: #151e2b !important;
+    border-color: #435168 !important;
+    color: #f4f7ff !important;
+}
+body:has(#fi-dark-theme-marker) [data-testid="stTextInput"] input,
+body:has(#fi-dark-theme-marker) [data-testid="stTextArea"] textarea,
+body:has(#fi-dark-theme-marker) [data-testid="stNumberInput"] input,
+body:has(#fi-dark-theme-marker) [data-testid="stDateInput"] input,
+body:has(#fi-dark-theme-marker) [data-testid="stTimeInput"] input {
+    background: transparent !important;
+    background-color: transparent !important;
+    color: #f4f7ff !important;
+    -webkit-text-fill-color: #f4f7ff !important;
+    caret-color: #ffffff !important;
+    border-color: transparent !important;
+}
+body:has(#fi-dark-theme-marker) input::placeholder,
+body:has(#fi-dark-theme-marker) textarea::placeholder {
+    color: #9aa9bd !important;
+    -webkit-text-fill-color: #9aa9bd !important;
+    opacity: 1 !important;
+}
+
+/* Password reveal button: keep the icon crisp and the button dark */
+body:has(#fi-dark-theme-marker) [data-testid="stTextInput"] button,
+body:has(#fi-dark-theme-marker) [data-testid="stTextInput"] [role="button"] {
+    background: #202b3a !important;
+    color: #dce7f7 !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    opacity: 1 !important;
+}
+body:has(#fi-dark-theme-marker) [data-testid="stTextInput"] button:hover,
+body:has(#fi-dark-theme-marker) [data-testid="stTextInput"] [role="button"]:hover {
+    background: #2b3b51 !important;
+    color: #ffffff !important;
+}
+body:has(#fi-dark-theme-marker) [data-testid="stTextInput"] button svg,
+body:has(#fi-dark-theme-marker) [data-testid="stTextInput"] [role="button"] svg {
+    color: #dce7f7 !important;
+    stroke: #dce7f7 !important;
+    fill: none !important;
+}
+body:has(#fi-dark-theme-marker) [data-testid="stTextInput"] button svg *,
+body:has(#fi-dark-theme-marker) [data-testid="stTextInput"] [role="button"] svg * {
+    stroke: currentColor !important;
+    fill: none !important;
+}
+
+/* Selects, multiselects and dropdown menus */
+body:has(#fi-dark-theme-marker) [data-testid="stSelectbox"] [data-baseweb="select"] > div,
+body:has(#fi-dark-theme-marker) [data-testid="stMultiSelect"] [data-baseweb="select"] > div,
+body:has(#fi-dark-theme-marker) [data-testid="stSelectbox"] [data-baseweb="select"] *,
+body:has(#fi-dark-theme-marker) [data-testid="stMultiSelect"] [data-baseweb="select"] * {
+    background-color: #202b3a !important;
+    color: #edf3ff !important;
+    border-color: #435168 !important;
+}
+body:has(#fi-dark-theme-marker) [role="listbox"],
+body:has(#fi-dark-theme-marker) [role="option"],
+body:has(#fi-dark-theme-marker) [data-baseweb="popover"] {
+    background: #202b3a !important;
+    color: #edf3ff !important;
+}
+body:has(#fi-dark-theme-marker) [aria-selected="true"] {
+    background: #30496c !important;
+    color: #ffffff !important;
+}
+
+/* File uploader, drag-and-drop area and browse button */
+body:has(#fi-dark-theme-marker) [data-testid="stFileUploader"],
+body:has(#fi-dark-theme-marker) [data-testid="stFileUploader"] section,
+body:has(#fi-dark-theme-marker) [data-testid="stFileUploader"] [data-testid="stFileUploaderDropzone"] {
+    background: #202b3a !important;
+    border-color: #435168 !important;
+    color: #e7edf7 !important;
+}
+body:has(#fi-dark-theme-marker) [data-testid="stFileUploader"] button {
+    background: #293b55 !important;
+    color: #f3f6fc !important;
+    border-color: #52647e !important;
+}
+
+/* Radio, checkbox, toggle and slider labels */
+body:has(#fi-dark-theme-marker) [data-testid="stRadio"] label,
+body:has(#fi-dark-theme-marker) [data-testid="stCheckbox"] label,
+body:has(#fi-dark-theme-marker) [data-testid="stToggle"] label,
+body:has(#fi-dark-theme-marker) [data-testid="stSlider"] label {
+    color: #dce5f3 !important;
+}
+body:has(#fi-dark-theme-marker) [data-testid="stRadio"] [data-testid="stMarkdownContainer"],
+body:has(#fi-dark-theme-marker) [data-testid="stCheckbox"] [data-testid="stMarkdownContainer"] {
+    color: #dce5f3 !important;
+}
+
+/* Chat messages and tabs */
+body:has(#fi-dark-theme-marker) [data-testid="stChatMessage"],
+body:has(#fi-dark-theme-marker) [data-testid="stChatInput"],
+body:has(#fi-dark-theme-marker) [data-testid="stChatInput"] textarea {
+    background: #202b3a !important;
+    color: #edf3ff !important;
+    border-color: #435168 !important;
+}
+body:has(#fi-dark-theme-marker) [data-testid="stTabs"] button[role="tab"][aria-selected="true"] {
+    color: #ffffff !important;
+    border-bottom-color: #82a6ff !important;
+}
+
+/* Disabled controls should remain readable */
+body:has(#fi-dark-theme-marker) input:disabled,
+body:has(#fi-dark-theme-marker) textarea:disabled,
+body:has(#fi-dark-theme-marker) button:disabled {
+    color: #9aa9bd !important;
+    -webkit-text-fill-color: #9aa9bd !important;
+    opacity: .8 !important;
+}
+
 /* Dark-mode form fields: override browser autofill and BaseWeb wrappers */
 body:has(#fi-dark-theme-marker) [data-testid="stTextInput"] > div,
 body:has(#fi-dark-theme-marker) [data-testid="stTextInput"] [data-baseweb="input"],
