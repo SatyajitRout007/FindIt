@@ -637,6 +637,320 @@ def render_listing_card(item, show_claim_button=False, client=None, user=None):
 
 
 # ============================================================
+# ADMINISTRATION
+# ============================================================
+
+ADMIN_EMAIL = "finditadmin092@gmail.com"
+
+
+def is_admin_user(client, user):
+    """Check the admin role stored in Supabase, never from browser input."""
+    try:
+        result = (
+            client.table("admin_users")
+            .select("user_id")
+            .eq("user_id", user["id"])
+            .limit(1)
+            .execute()
+        )
+        return bool(result.data)
+    except Exception:
+        return False
+
+
+def admin_service_client():
+    """Server-side Supabase admin client. Never expose this key to the browser."""
+    url = get_setting("supabase", "url", "SUPABASE_URL")
+    service_key = get_setting(
+        "supabase", "service_role_key", "SUPABASE_SERVICE_ROLE_KEY"
+    )
+    if not url or not service_key:
+        return None
+    return create_client(url, service_key)
+
+
+def write_admin_log(admin_client, admin_user, action, reason,
+                    target_user_id=None, target_listing_id=None, details=None):
+    admin_client.table("admin_action_logs").insert({
+        "admin_user_id": admin_user["id"],
+        "action": action,
+        "target_user_id": target_user_id,
+        "target_listing_id": (
+            str(target_listing_id) if target_listing_id is not None else None
+        ),
+        "reason": reason.strip(),
+        "details": details or {},
+    }).execute()
+
+
+def render_admin_panel(client, user):
+    render_hero(
+        "RESTRICTED AREA",
+        "FindIt administration",
+        "Review community activity, moderate listings, and manage user access.",
+    )
+
+    admin_client = admin_service_client()
+    if admin_client is None:
+        st.error(
+            "Admin actions are not configured yet. Add "
+            "SUPABASE_SERVICE_ROLE_KEY to Streamlit Community Cloud secrets "
+            "as described in supabase_admin_setup.sql."
+        )
+        st.info(
+            "The service-role key is private. Never put it in app.py, GitHub, "
+            "or a public message."
+        )
+        return
+
+    try:
+        all_listings = (
+            admin_client.table("listings")
+            .select("*")
+            .order("created_at", desc=True)
+            .execute()
+        ).data or []
+        all_claims = (
+            admin_client.table("claims")
+            .select("*")
+            .execute()
+        ).data or []
+        users_response = admin_client.auth.admin.list_users()
+        auth_users = getattr(users_response, "users", users_response) or []
+    except Exception as exc:
+        st.error("Could not load admin data: " + friendly_error(exc))
+        return
+
+    active_listings = [x for x in all_listings if x.get("status") == "open"]
+    suspended_users = [
+        u for u in auth_users
+        if getattr(u, "banned_until", None)
+    ]
+
+    m1, m2, m3, m4 = st.columns(4)
+    m1.metric("Registered accounts", len(auth_users))
+    m2.metric("All listings", len(all_listings))
+    m3.metric("Open listings", len(active_listings))
+    m4.metric("Claims", len(all_claims))
+
+    st.divider()
+    tab_listings, tab_users, tab_logs = st.tabs(
+        ["Listing moderation", "User management", "Admin activity"]
+    )
+
+    with tab_listings:
+        st.subheader("Community listings")
+        search_listing = st.text_input(
+            "Search listings",
+            placeholder="Search by item title, description or location",
+            key="admin_listing_search",
+        ).strip().lower()
+
+        filtered_listings = [
+            item for item in all_listings
+            if not search_listing or search_listing in " ".join(
+                str(item.get(k) or "")
+                for k in ("title", "description", "location", "category")
+            ).lower()
+        ]
+
+        for item in filtered_listings:
+            with st.container(border=True):
+                left, right = st.columns([3, 1])
+                with left:
+                    st.markdown("**" + str(item.get("title", "Untitled")) + "**")
+                    st.caption(
+                        f"{item.get('listing_type', 'item').upper()} · "
+                        f"{item.get('status', 'unknown').upper()} · "
+                        f"{item.get('location', 'No location')}"
+                    )
+                    st.write(item.get("description") or "No description.")
+                    st.caption(
+                        f"Owner ID: {item.get('owner_id')} · "
+                        f"Listing ID: {item.get('id')}"
+                    )
+                with right:
+                    if item.get("image_url"):
+                        st.image(item["image_url"], use_container_width=True)
+
+                with st.expander("Moderate this listing"):
+                    reason = st.text_input(
+                        "Reason for moderation",
+                        key=f"listing_reason_{item.get('id')}",
+                        placeholder="Explain why action is being taken",
+                    )
+                    a1, a2 = st.columns(2)
+                    with a1:
+                        if st.button(
+                            "Unlist / resolve",
+                            key=f"admin_unlist_{item.get('id')}",
+                            use_container_width=True,
+                        ):
+                            if len(reason.strip()) < 3:
+                                st.warning("Enter a reason (at least 3 characters).")
+                            else:
+                                try:
+                                    admin_client.table("listings").update(
+                                        {"status": "resolved"}
+                                    ).eq("id", item["id"]).execute()
+                                    write_admin_log(
+                                        admin_client, user, "listing_unlisted",
+                                        reason, target_user_id=item.get("owner_id"),
+                                        target_listing_id=item.get("id")
+                                    )
+                                    st.success("Listing unlisted.")
+                                    st.rerun()
+                                except Exception as exc:
+                                    st.error(friendly_error(exc))
+                    with a2:
+                        if st.button(
+                            "Delete listing",
+                            key=f"admin_delete_{item.get('id')}",
+                            type="secondary",
+                            use_container_width=True,
+                        ):
+                            if len(reason.strip()) < 3:
+                                st.warning("Enter a reason (at least 3 characters).")
+                            else:
+                                try:
+                                    admin_client.table("listings").delete().eq(
+                                        "id", item["id"]
+                                    ).execute()
+                                    write_admin_log(
+                                        admin_client, user, "listing_deleted",
+                                        reason, target_user_id=item.get("owner_id"),
+                                        target_listing_id=item.get("id")
+                                    )
+                                    st.success(
+                                        "Listing deleted. Its related claims may "
+                                        "also be removed by your database cascade."
+                                    )
+                                    st.rerun()
+                                except Exception as exc:
+                                    st.error(friendly_error(exc))
+
+        if not filtered_listings:
+            st.info("No listings match that search.")
+
+    with tab_users:
+        st.subheader("Account management")
+        st.caption(
+            "Suspensions are applied through Supabase Auth. A permanent ban "
+            "uses a very long ban duration and can still be reversed by an admin."
+        )
+
+        user_rows = []
+        for auth_user in auth_users:
+            uid = getattr(auth_user, "id", None)
+            email = getattr(auth_user, "email", None) or "(no email)"
+            banned_until = getattr(auth_user, "banned_until", None)
+            user_rows.append((email, uid, banned_until))
+
+        user_rows.sort(key=lambda row: row[0].lower())
+        labels = [
+            f"{email} — {uid}" for email, uid, _ in user_rows
+            if uid != user["id"]
+        ]
+        label_to_row = {
+            f"{email} — {uid}": (email, uid, banned)
+            for email, uid, banned in user_rows
+            if uid != user["id"]
+        }
+
+        if not labels:
+            st.info("No other user accounts were found.")
+        else:
+            selected_label = st.selectbox("Select an account", labels)
+            selected_email, selected_uid, selected_banned = label_to_row[
+                selected_label
+            ]
+            st.write("**Account:**", selected_email)
+            st.write(
+                "**Current access:**",
+                "Suspended" if selected_banned else "Not suspended",
+            )
+
+            reason = st.text_area(
+                "Moderation reason",
+                key="admin_user_reason",
+                placeholder="Explain the reason for this account action",
+            )
+            duration = st.selectbox(
+                "Suspension duration",
+                ["24 hours", "7 days", "30 days", "Permanent (reversible by admin)"],
+            )
+
+            b1, b2 = st.columns(2)
+            with b1:
+                if st.button(
+                    "Suspend account",
+                    type="primary",
+                    use_container_width=True,
+                ):
+                    if len(reason.strip()) < 3:
+                        st.warning("Enter a reason (at least 3 characters).")
+                    else:
+                        ban_values = {
+                            "24 hours": "24h",
+                            "7 days": "168h",
+                            "30 days": "720h",
+                            "Permanent (reversible by admin)": "876000h",
+                        }
+                        try:
+                            admin_client.auth.admin.update_user_by_id(
+                                selected_uid,
+                                {"ban_duration": ban_values[duration]},
+                            )
+                            write_admin_log(
+                                admin_client, user, "account_suspended",
+                                reason, target_user_id=selected_uid,
+                                details={"duration": duration}
+                            )
+                            st.success(f"{selected_email} has been suspended.")
+                            st.rerun()
+                        except Exception as exc:
+                            st.error(friendly_error(exc))
+            with b2:
+                if st.button(
+                    "Restore account access",
+                    use_container_width=True,
+                ):
+                    if len(reason.strip()) < 3:
+                        st.warning("Enter a reason for restoring access.")
+                    else:
+                        try:
+                            admin_client.auth.admin.update_user_by_id(
+                                selected_uid,
+                                {"ban_duration": "none"},
+                            )
+                            write_admin_log(
+                                admin_client, user, "account_restored",
+                                reason, target_user_id=selected_uid
+                            )
+                            st.success(f"Access restored for {selected_email}.")
+                            st.rerun()
+                        except Exception as exc:
+                            st.error(friendly_error(exc))
+
+    with tab_logs:
+        st.subheader("Recent admin activity")
+        try:
+            logs = (
+                admin_client.table("admin_action_logs")
+                .select("*")
+                .order("created_at", desc=True)
+                .limit(100)
+                .execute()
+            ).data or []
+            if not logs:
+                st.info("No moderation actions have been recorded yet.")
+            else:
+                st.dataframe(logs, use_container_width=True, hide_index=True)
+        except Exception as exc:
+            st.error("Could not load the audit log: " + friendly_error(exc))
+
+
+# ============================================================
 # MAIN APPLICATION
 # ============================================================
 
@@ -791,6 +1105,9 @@ def main():
 
         st.stop()
 
+    # Determine admin status from the protected Supabase role table.
+    admin_mode = is_admin_user(client, user)
+
     # ========================================================
     # SIDEBAR NAVIGATION
     # ========================================================
@@ -812,12 +1129,13 @@ def main():
                 "Report an item",
                 "My dashboard",
                 "Claims inbox",
-            ],
+            ] + (["Admin panel"] if admin_mode else []),
             format_func=lambda x: {
                 "Home & Search": "⌕   Explore items",
                 "Report an item": "＋   Report an item",
                 "My dashboard": "▦   My dashboard",
                 "Claims inbox": "✉   Claims inbox",
+                "Admin panel": "⚙   Admin panel",
             }.get(x, x),
             label_visibility="collapsed",
             key="main_navigation",
@@ -1548,6 +1866,13 @@ def main():
                     )
 
                     st.write(claim.get("message", ""))
+
+    # ========================================================
+    # ADMIN PANEL
+    # ========================================================
+
+    elif page == "Admin panel" and admin_mode:
+        render_admin_panel(client, user)
 
     # ========================================================
     # FOOTER
