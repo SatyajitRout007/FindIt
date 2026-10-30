@@ -2544,21 +2544,6 @@ def main():
                     help="This detail is stored separately and is visible only to the listing owner.",
                 )
 
-                st.markdown("**Approximate map location (optional)**")
-                coord_a, coord_b = st.columns(2)
-                with coord_a:
-                    approximate_lat_text = st.text_input(
-                        "Latitude",
-                        placeholder="e.g. 12.9716",
-                        help="Use an approximate public landmark, not a private address.",
-                    )
-                with coord_b:
-                    approximate_lng_text = st.text_input(
-                        "Longitude",
-                        placeholder="e.g. 77.5946",
-                        help="Both coordinates are optional. Add both or leave both blank.",
-                    )
-
                 uploaded = st.file_uploader(
                     "Item photo (JPG, JPEG or PNG)",
                     type=["jpg", "jpeg", "png"],
@@ -2585,17 +2570,8 @@ def main():
                         st.error("Add a slightly more detailed description (at least 8 characters).")
                     elif len(location.strip()) < 2:
                         st.error("Enter the place where it was lost or found.")
-                    elif bool(approximate_lat_text.strip()) != bool(approximate_lng_text.strip()):
-                        st.error("Enter both approximate coordinates or leave both blank.")
                     else:
                         try:
-                            approx_lat = float(approximate_lat_text) if approximate_lat_text.strip() else None
-                            approx_lng = float(approximate_lng_text) if approximate_lng_text.strip() else None
-                            if approx_lat is not None and not (-90 <= approx_lat <= 90):
-                                raise ValueError("Latitude must be between -90 and 90.")
-                            if approx_lng is not None and not (-180 <= approx_lng <= 180):
-                                raise ValueError("Longitude must be between -180 and 180.")
-
                             payload = {
                                 "owner_id": user["id"],
                                 "listing_type": "lost" if listing_type == "Lost item" else "found",
@@ -2607,9 +2583,6 @@ def main():
                                 "event_date": event_date.isoformat(),
                                 "status": "open",
                             }
-                            if approx_lat is not None and approx_lng is not None:
-                                payload["approximate_lat"] = approx_lat
-                                payload["approximate_lng"] = approx_lng
                             photo_bytes = uploaded.getvalue() if uploaded else None
                             duplicates = [
                                 pair for pair in find_duplicates(payload, listings, user["id"])
