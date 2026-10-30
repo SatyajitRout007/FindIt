@@ -1056,23 +1056,6 @@ body:has(#fi-dark-theme-marker) [data-testid="stDialog"] {
 """, unsafe_allow_html=True)
 
 
-def render_theme_toggle():
-    """Render the app's Light/Dark selector inside the Settings menu."""
-    st.markdown("**Appearance**")
-    theme = st.radio(
-        "Choose theme",
-        ["Light", "Dark"],
-        horizontal=True,
-        key="fi_theme_mode",
-        label_visibility="collapsed",
-    )
-    if theme == "Dark":
-        st.markdown(
-            '<div id="fi-dark-theme-marker" style="display:none"></div>',
-            unsafe_allow_html=True,
-        )
-
-
 # ============================================================
 # SUPABASE AND AUTHENTICATION
 # ============================================================
@@ -1744,7 +1727,7 @@ def main():
 
     if not user:
         with st.sidebar.expander("⚙️ Settings", expanded=False):
-            render_theme_toggle()
+            st.caption("FindIt uses a clean, light appearance.")
 
         render_brand()
 
@@ -1955,8 +1938,6 @@ def main():
         st.divider()
 
         with st.expander("⚙️ Settings", expanded=False):
-            render_theme_toggle()
-
             st.divider()
             st.markdown("**ACCOUNT**")
             st.caption(user.get("email", "Signed in"))
