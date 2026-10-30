@@ -121,17 +121,23 @@ def find_duplicates(candidate, listings, user_id, limit=4):
 
 
 def get_blocked_user_ids(client, user_id):
-    rows = client.table("blocked_users").select("blocked_user_id").eq(
-        "blocker_id", user_id
-    ).execute().data or []
-    return {row["blocked_user_id"] for row in rows}
+    try:
+        rows = client.table("blocked_users").select("blocked_user_id").eq(
+            "blocker_id", user_id
+        ).execute().data or []
+        return {row["blocked_user_id"] for row in rows}
+    except Exception:
+        return set()
 
 
 def get_saved_listing_ids(client, user_id):
-    rows = client.table("saved_listings").select("listing_id").eq(
-        "user_id", user_id
-    ).execute().data or []
-    return {str(row["listing_id"]) for row in rows}
+    try:
+        rows = client.table("saved_listings").select("listing_id").eq(
+            "user_id", user_id
+        ).execute().data or []
+        return {str(row["listing_id"]) for row in rows}
+    except Exception:
+        return set()
 
 
 def get_unread_notification_count(client, user_id):
