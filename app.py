@@ -2650,6 +2650,10 @@ def main():
                         **5. Protect yourself and the owner**
                         - Do not post phone numbers, home addresses, ID details or sensitive contents publicly.
                         - Do not demand money or payment for returning an item.
+
+                        **6. Unlist the item when it is resolved**
+                        - Once the owner has received the item back, unlist your found-item report on FindIt.
+                        - If the owner contacts you to confirm that the item has been returned or the matter is resolved, unlist the listing so others know it is no longer available.
                         """
                     )
 
