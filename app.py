@@ -2614,101 +2614,102 @@ def main():
 
         pending_listing = st.session_state.get("pending_listing")
         if pending_listing and pending_listing.get("payload", {}).get("owner_id") == user["id"]:
-            pending_payload = pending_listing.get("payload", {})
-            is_found_report = pending_payload.get("listing_type") == "found"
-            duplicate_matches = pending_listing.get("duplicates", [])
+            # Open the review step as a modal dialog instead of placing it
+            # underneath the report form where users would have to scroll.
+            @st.dialog("Review before publishing", width="large")
+            def review_pending_listing():
+                pending_payload = pending_listing.get("payload", {})
+                is_found_report = pending_payload.get("listing_type") == "found"
+                duplicate_matches = pending_listing.get("duplicates", [])
 
-            if duplicate_matches:
-                st.warning(
-                    "FindIt found reports that look similar. Check them before publishing "
-                    "to avoid creating a duplicate. This is only a similarity warning."
-                )
-                for duplicate_score, duplicate_item in duplicate_matches:
+                if is_found_report:
+                    st.markdown("### 🛡️ Safe return instructions")
+                    st.info(
+                        "You're reporting an item you found. Please read these steps "
+                        "before publishing so it can be returned safely to its rightful owner."
+                    )
                     st.markdown(
-                        f"**{duplicate_score}% similar:** {duplicate_item.get('title', 'Listing')} "
-                        f"· {duplicate_item.get('listing_type', '').upper()} "
-                        f"· {duplicate_item.get('location', 'Unknown location')}"
+                        """
+                        **1. Keep the item safe**
+                        - Keep it with you or in a secure place. Do not use, sell, throw away, or damage it.
+                        - If it contains cash, cards, documents or private information, avoid handling or sharing those details.
+
+                        **2. Stay reachable**
+                        - Check your FindIt messages and notifications for a response from the owner.
+                        - Reply through FindIt and arrange a handover only after checking the claimant.
+
+                        **3. Verify the person claiming it**
+                        - Ask them to describe a detail that is NOT shown in your public listing or photo.
+                        - Do not reveal your private ownership-check detail. Let the claimant answer first.
+                        - Never ask for or share passwords, PINs, OTPs, full card numbers or full identity numbers.
+
+                        **4. Arrange a safe handover**
+                        - Meet in a busy public place during the day, or use an appropriate lost-property desk.
+                        - If anything feels suspicious or unsafe, do not hand over the item; use FindIt's report tools.
+
+                        **5. Protect yourself and the owner**
+                        - Do not post phone numbers, home addresses, ID details or sensitive contents publicly.
+                        - Do not demand money or payment for returning an item.
+                        """
                     )
 
-            if is_found_report:
-                st.markdown("### 🛡️ Before you publish: safe return instructions")
-                st.info(
-                    "You are reporting an item you found. Please read these steps "
-                    "so it can be returned safely to its rightful owner."
-                )
-                st.markdown(
-                    """
-                    **1. Keep the item safe**
-                    - Keep it with you or in a secure place. Do not use, sell, throw away, or damage it.
-                    - If it contains cash, cards, documents or private information, avoid handling or sharing those details.
+                    category = pending_payload.get("category", "Other")
+                    verification_prompts = {
+                        "Wallet / Cards": [
+                            "Ask them to describe the wallet's material, colour, shape or a non-sensitive item kept inside.",
+                            "For cards, never ask for the full card number, CVV, PIN or OTP.",
+                        ],
+                        "Electronics": [
+                            "Ask them to describe a case, scratch, sticker, wallpaper detail or accessory not visible in the listing.",
+                            "For a phone or laptop, never ask them to unlock it or reveal a passcode.",
+                        ],
+                        "Keys": [
+                            "Ask how many keys were on the ring, the keychain design, or a distinctive attachment.",
+                        ],
+                        "Bag": [
+                            "Ask them to describe a hidden pocket, keychain, lining, contents category or distinctive internal feature.",
+                        ],
+                        "Clothing": [
+                            "Ask about a brand label, pocket detail, size, repair, pattern or another feature not shown in the photo.",
+                        ],
+                        "Books / Stationery": [
+                            "Ask about a cover mark, annotation, bookmark, sticker or other personal identifying feature.",
+                        ],
+                        "Jewellery": [
+                            "Ask about a clasp, engraving, design detail or a distinctive feature not visible in the listing.",
+                        ],
+                        "Bottle / Container": [
+                            "Ask about a sticker, dent, cap, contents type or other distinctive feature.",
+                        ],
+                        "Other": [
+                            "Ask them to describe a unique mark, attachment, hidden feature or a non-public detail.",
+                        ],
+                    }
+                    st.markdown("**Suggested ownership questions for this item**")
+                    for prompt in verification_prompts.get(category, verification_prompts["Other"]):
+                        st.markdown(f"- {prompt}")
+                    st.caption(
+                        "These are suggestions, not proof by themselves. Use more than one "
+                        "reasonable detail where possible, and never disclose the private answer."
+                    )
 
-                    **2. Stay reachable**
-                    - Check your FindIt messages and notifications for a response from the owner.
-                    - Reply through FindIt and arrange a handover only after checking the claimant.
+                if duplicate_matches:
+                    st.divider()
+                    st.warning(
+                        "FindIt found reports that look similar. Check them before publishing "
+                        "to avoid creating a duplicate. This is only a similarity warning."
+                    )
+                    for duplicate_score, duplicate_item in duplicate_matches:
+                        st.markdown(
+                            f"**{duplicate_score}% similar:** {duplicate_item.get('title', 'Listing')} "
+                            f"· {duplicate_item.get('listing_type', '').upper()} "
+                            f"· {duplicate_item.get('location', 'Unknown location')}"
+                        )
 
-                    **3. Verify the person claiming it**
-                    - Ask them to describe a detail that is NOT shown in your public listing or photo.
-                    - Do not reveal your private ownership-check detail. Let the claimant answer first.
-                    - Never ask for or share passwords, PINs, OTPs, full card numbers or full identity numbers.
-
-                    **4. Arrange a safe handover**
-                    - Meet in a busy public place during the day, or use an appropriate lost-property desk.
-                    - If anything feels suspicious or unsafe, do not hand over the item; use FindIt's report tools.
-
-                    **5. Protect yourself and the owner**
-                    - Do not post phone numbers, home addresses, ID details or sensitive contents publicly.
-                    - Do not demand money or payment for returning the item.
-                    """
-                )
-
-                category = pending_payload.get("category", "Other")
-                verification_prompts = {
-                    "Wallet / Cards": [
-                        "Ask them to describe the wallet's material, colour, shape or a non-sensitive item kept inside.",
-                        "For cards, never ask for the full card number, CVV, PIN or OTP.",
-                    ],
-                    "Electronics": [
-                        "Ask them to describe a case, scratch, sticker, wallpaper detail or accessory not visible in the listing.",
-                        "For a phone or laptop, never ask them to unlock it or reveal a passcode.",
-                    ],
-                    "Keys": [
-                        "Ask how many keys were on the ring, the keychain design, or a distinctive attachment.",
-                    ],
-                    "Bag": [
-                        "Ask them to describe a hidden pocket, keychain, lining, contents category or distinctive internal feature.",
-                    ],
-                    "Clothing": [
-                        "Ask about a brand label, pocket detail, size, repair, pattern or another feature not shown in the photo.",
-                    ],
-                    "Books / Stationery": [
-                        "Ask about a cover mark, annotation, bookmark, sticker or other personal identifying feature.",
-                    ],
-                    "Jewellery": [
-                        "Ask about a clasp, engraving, design detail or a distinctive feature not visible in the listing.",
-                    ],
-                    "Bottle / Container": [
-                        "Ask about a sticker, dent, cap, contents type or other distinctive feature.",
-                    ],
-                    "Other": [
-                        "Ask them to describe a unique mark, attachment, hidden feature or a non-public detail.",
-                    ],
-                }
-                st.markdown("**Suggested ownership questions for this item**")
-                for prompt in verification_prompts.get(category, verification_prompts["Other"]):
-                    st.markdown(f"- {prompt}")
-                st.caption(
-                    "These are suggestions, not proof by themselves. Use more than one "
-                    "reasonable detail where possible, and never disclose the private answer."
-                )
-
-            confirm_col, cancel_col = st.columns(2)
-            with confirm_col:
-                publish_label = (
-                    "I understand — publish found-item report"
-                    if is_found_report else "Publish anyway"
-                )
+                st.divider()
+                confirm_label = "Publish listing" if is_found_report else "Publish anyway"
                 if st.button(
-                    publish_label,
+                    confirm_label,
                     type="primary",
                     key="confirm_duplicate_publish",
                     use_container_width=True,
@@ -2725,7 +2726,7 @@ def main():
                         st.rerun()
                     except Exception as exc:
                         st.error("Could not publish the listing. " + friendly_error(exc))
-            with cancel_col:
+
                 if st.button(
                     "Cancel report",
                     key="cancel_duplicate_publish",
@@ -2733,6 +2734,8 @@ def main():
                 ):
                     st.session_state.pop("pending_listing", None)
                     st.rerun()
+
+            review_pending_listing()
 
     # ========================================================
     # MY DASHBOARD — UNLIST / RELIST / DELETE
