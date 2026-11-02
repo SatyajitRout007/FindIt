@@ -2704,6 +2704,8 @@ def main():
                         st.error("Add a slightly more detailed description (at least 8 characters).")
                     elif len(location.strip()) < 2:
                         st.error("Enter the place where it was lost or found.")
+                    elif listing_type == "Found item" and uploaded is None:
+                        st.error("A photo is required when reporting a found item. Please upload a clear photo to continue.")
                     else:
                         try:
                             payload = {
