@@ -1935,6 +1935,15 @@ def main():
 
                     except Exception as exc:
                         st.error(friendly_error(exc))
+            if st.button(
+                "Forgot password?",
+                key="switch_to_forgot_password",
+                type="tertiary",
+                use_container_width=True,
+            ):
+                st.session_state["auth_view"] = "forgot_password"
+                st.rerun()
+
             st.markdown(
                 '<p class="fi-muted" style="text-align:center;margin-top:1rem;">New to FindIt?</p>',
                 unsafe_allow_html=True,
@@ -1946,6 +1955,46 @@ def main():
                 use_container_width=True,
             ):
                 st.session_state["auth_view"] = "signup"
+                st.rerun()
+
+        elif st.session_state["auth_view"] == "forgot_password":
+            st.markdown("## Reset your password")
+            st.markdown(
+                '<p class="fi-muted">Enter the email address linked to your FindIt account. We\'ll send you a password reset link.</p>',
+                unsafe_allow_html=True,
+            )
+
+            with st.form("forgot_password_form"):
+                reset_email = st.text_input(
+                    "Email address",
+                    key="forgot_password_email",
+                ).strip().lower()
+                submitted = st.form_submit_button(
+                    "Send reset link",
+                    type="primary",
+                    use_container_width=True,
+                )
+
+                if submitted:
+                    if not reset_email or "@" not in reset_email:
+                        st.error("Enter a valid email address.")
+                    else:
+                        try:
+                            client.auth.reset_password_for_email(reset_email)
+                            st.success(
+                                "If an account exists for that email, a password reset link will be sent. "
+                                "Please check your inbox and spam folder."
+                            )
+                        except Exception as exc:
+                            st.error(friendly_error(exc))
+
+            if st.button(
+                "Back to log in",
+                key="back_from_forgot_password",
+                type="tertiary",
+                use_container_width=True,
+            ):
+                st.session_state["auth_view"] = "login"
                 st.rerun()
 
         else:
