@@ -1881,6 +1881,76 @@ def main():
 
         st.stop()
 
+    # Supabase recovery links must carry a token_hash in the query string.
+    # The default confirmation URL redirects with tokens in the URL fragment,
+    # which Streamlit's server cannot read.
+    recovery_type = st.query_params.get("type")
+    recovery_token = st.query_params.get("token_hash")
+
+    if recovery_type == "recovery" and recovery_token:
+        if not st.session_state.get("_findit_recovery_verified"):
+            try:
+                recovery_response = client.auth.verify_otp({
+                    "token_hash": recovery_token,
+                    "type": "recovery",
+                })
+                if not recovery_response.user or not recovery_response.session:
+                    raise ValueError("The reset link could not be verified. Request a new one.")
+                st.session_state["_findit_recovery_verified"] = True
+                st.session_state["_findit_recovery_user"] = {
+                    "id": recovery_response.user.id,
+                    "email": recovery_response.user.email,
+                }
+            except Exception:
+                st.error("This password-reset link is invalid or has expired. Please request a new one.")
+                if st.button("Back to login", key="expired_reset_back"):
+                    st.query_params.clear()
+                    st.session_state.pop("_findit_recovery_verified", None)
+                    st.rerun()
+                st.stop()
+
+        render_brand()
+        render_hero(
+            "ACCOUNT RECOVERY",
+            "Choose a new password.",
+            "Your reset link has been verified. Create a new password for your FindIt account.",
+        )
+        with st.form("set_new_password_form"):
+            new_password = st.text_input(
+                "New password (at least 8 characters)",
+                type="password",
+                key="recovery_new_password",
+            )
+            confirm_new_password = st.text_input(
+                "Confirm new password",
+                type="password",
+                key="recovery_confirm_password",
+            )
+            save_new_password = st.form_submit_button(
+                "Update password",
+                type="primary",
+                use_container_width=True,
+            )
+
+        if save_new_password:
+            if len(new_password) < 8:
+                st.error("Use a password with at least 8 characters.")
+            elif new_password != confirm_new_password:
+                st.error("The passwords do not match.")
+            else:
+                try:
+                    client.auth.update_user({"password": new_password})
+                    st.success("Your password has been updated. You can now log in with your new password.")
+                    st.session_state.pop("_findit_recovery_verified", None)
+                    st.session_state.pop("_findit_recovery_user", None)
+                    st.session_state.pop("user", None)
+                    st.query_params.clear()
+                    if st.button("Go to login", key="recovery_done_login"):
+                        st.rerun()
+                except Exception as exc:
+                    st.error("Could not update your password: " + friendly_error(exc))
+        st.stop()
+
     user = get_user()
 
     # ========================================================
