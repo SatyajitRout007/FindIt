@@ -1881,6 +1881,19 @@ def main():
 
         st.stop()
 
+    if st.session_state.get("_findit_recovery_completed"):
+        render_brand()
+        render_hero(
+            "PASSWORD UPDATED",
+            "You're all set.",
+            "Your FindIt password has been changed successfully. Log in using your new password.",
+        )
+        if st.button("Go to login", key="recovery_completed_login", type="primary"):
+            st.session_state.pop("_findit_recovery_completed", None)
+            st.session_state["auth_view"] = "login"
+            st.rerun()
+        st.stop()
+
     # Supabase recovery links must carry a token_hash in the query string.
     # The default confirmation URL redirects with tokens in the URL fragment,
     # which Streamlit's server cannot read.
@@ -1940,13 +1953,12 @@ def main():
             else:
                 try:
                     client.auth.update_user({"password": new_password})
-                    st.success("Your password has been updated. You can now log in with your new password.")
                     st.session_state.pop("_findit_recovery_verified", None)
                     st.session_state.pop("_findit_recovery_user", None)
                     st.session_state.pop("user", None)
+                    st.session_state["_findit_recovery_completed"] = True
                     st.query_params.clear()
-                    if st.button("Go to login", key="recovery_done_login"):
-                        st.rerun()
+                    st.rerun()
                 except Exception as exc:
                     st.error("Could not update your password: " + friendly_error(exc))
         st.stop()
