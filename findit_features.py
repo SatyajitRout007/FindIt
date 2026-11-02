@@ -390,7 +390,6 @@ def render_notifications_page(client, user):
 
 
 def render_profile_page(client, user, listings):
-    """Show a transparent, activity-based community reputation profile."""
     st.markdown("### Your community profile")
     profile = client.table("profiles").select("user_id, username, created_at").eq(
         "user_id", user["id"]
@@ -403,41 +402,9 @@ def render_profile_page(client, user, listings):
     helped = len(resolved_found)
     created = len(own)
 
-    # Points are derived from existing listing data; no database migration is needed.
-    # Resolved found listings earn a bonus, but points are not proof of identity or ownership.
-    points = (created * 5) + (helped * 20)
-    if points >= 150:
-        level = "Community champion"
-        next_level = None
-        next_target = None
-    elif points >= 75:
-        level = "Community helper"
-        next_level = "Community champion"
-        next_target = 150
-    elif points >= 25:
-        level = "Active contributor"
-        next_level = "Community helper"
-        next_target = 75
-    else:
-        level = "New member"
-        next_level = "Active contributor"
-        next_target = 25
-
     st.subheader("@" + str(profile.get("username") or user.get("username", "member")))
     if profile.get("created_at"):
         st.caption("FindIt member since " + str(profile["created_at"])[:10])
-
-    score_col, level_col = st.columns([1, 2])
-    with score_col:
-        st.metric("Community points", points)
-    with level_col:
-        st.markdown(f"**{level}**")
-        if next_target is not None:
-            st.caption(f"{next_target - points} more point(s) to reach {next_level}.")
-            st.progress(min(points / next_target, 1.0))
-        else:
-            st.caption("You've reached the highest current community level.")
-
     m1, m2, m3 = st.columns(3)
     m1.metric("Reports posted", created)
     m2.metric("Resolved found items", helped)
@@ -446,15 +413,13 @@ def render_profile_page(client, user, listings):
     st.markdown("**Community badges**")
     badges = []
     if created >= 1:
-        badges.append(("🧭", "First report", "Published your first lost-or-found report"))
+        badges.append(("🧭", "First report", "Published a first lost-or-found report"))
     if created >= 5:
         badges.append(("🌟", "Active member", "Published five or more reports"))
     if helped >= 1:
         badges.append(("🤝", "Helpful finder", "Marked a found-item report as resolved"))
     if helped >= 3:
         badges.append(("🏅", "Community champion", "Marked at least three found-item reports as resolved"))
-    if points >= 75:
-        badges.append(("⭐", "Trusted contributor", "Earned 75 or more community points"))
     if not badges:
         st.info("Your first report will unlock your first community badge.")
     else:
@@ -464,11 +429,6 @@ def render_profile_page(client, user, listings):
                 with st.container(border=True):
                     st.markdown(f"### {emoji} {title}")
                     st.caption(desc)
-
-    st.caption(
-        "How points work: +5 for each published report and +20 for each resolved found-item report. "
-        "Points and badges recognise activity; they do not verify identity, ownership or trustworthiness."
-    )
 
     st.divider()
     with st.expander("Community member directory", expanded=False):
@@ -481,13 +441,13 @@ def render_profile_page(client, user, listings):
             "user_id, username, created_at"
         ).order("created_at", desc=True).limit(100).execute().data or []
         counts = {}
-        helpful_counts = {}
+        helpful = set()
         for item in listings:
             owner = item.get("owner_id")
             if owner:
                 counts[owner] = counts.get(owner, 0) + 1
                 if item.get("listing_type") == "found" and item.get("status") == "resolved":
-                    helpful_counts[owner] = helpful_counts.get(owner, 0) + 1
+                    helpful.add(owner)
         visible_members = [
             member for member in members
             if member.get("username")
@@ -501,35 +461,21 @@ def render_profile_page(client, user, listings):
                 if member_id == user["id"]:
                     continue
                 member_name = member.get("username") or "FindIt member"
-                member_reports = counts.get(member_id, 0)
-                member_helped = helpful_counts.get(member_id, 0)
-                member_points = member_reports * 5 + member_helped * 20
-                if member_points >= 150:
-                    member_level = "Community champion"
-                elif member_points >= 75:
-                    member_level = "Community helper"
-                elif member_points >= 25:
-                    member_level = "Active contributor"
-                else:
-                    member_level = "New member"
                 member_badges = []
-                if member_reports >= 5:
+                if counts.get(member_id, 0) >= 5:
                     member_badges.append("🌟 Active member")
-                if member_helped >= 1:
+                if member_id in helpful:
                     member_badges.append("🤝 Helpful finder")
-                if member_helped >= 3:
-                    member_badges.append("🏅 Community champion")
-                if member_points >= 75:
-                    member_badges.append("⭐ Trusted contributor")
                 with st.container(border=True):
-                    st.markdown(f"**@{member_name}** · {member_level}")
+                    st.markdown(f"**@{member_name}**")
                     st.caption(
-                        f"{member_points} points · {member_reports} public report(s) · "
-                        f"{member_helped} resolved found item(s) · "
+                        f"{counts.get(member_id, 0)} public report(s) · "
                         f"Member since {str(member.get('created_at', ''))[:10]}"
                     )
                     if member_badges:
                         st.caption(" · ".join(member_badges))
+                    else:
+                        st.caption("Community member")
 
     st.divider()
     st.markdown("**Blocked accounts**")
