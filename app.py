@@ -1980,7 +1980,10 @@ def main():
                         st.error("Enter a valid email address.")
                     else:
                         try:
-                            client.auth.reset_password_for_email(reset_email)
+                            client.auth.reset_password_for_email(
+                                reset_email,
+                                options={"redirect_to": "https://finditapp.streamlit.app"},
+                            )
                             st.success(
                                 "If an account exists for that email, a password reset link will be sent. "
                                 "Please check your inbox and spam folder."
