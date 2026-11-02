@@ -2092,7 +2092,7 @@ def main():
             with st.form("signup_form"):
                 new_username = st.text_input(
                     "Unique username",
-                    placeholder="e.g. Satyajit007",
+                    placeholder="e.g. cooluser123",
                     help="3–20 characters. Letters, numbers, dots and underscores.",
                 ).strip().lstrip("@")
 
@@ -2192,7 +2192,7 @@ def main():
         with st.form("choose_username_form"):
             desired_username = st.text_input(
                 "Unique username",
-                placeholder="e.g. Satyajit007",
+                placeholder="e.g. cooluser123",
                 help="3–20 characters. Letters, numbers, dots and underscores.",
             )
             submitted_username = st.form_submit_button(
